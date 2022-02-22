@@ -7,12 +7,13 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"golang.design/x/clipboard"
+	// "golang.design/x/clipboard"
+	// "golang.design/x/clipboard"
 )
 
-func init() {
-	clipboard.Init()
-}
+// func init() {
+// 	clipboard.Init()
+// }
 
 type Terminal struct {
 	masterWindow fyne.Window
@@ -71,7 +72,7 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 				Importance:    widget.LowImportance,
 				IconPlacement: widget.ButtonIconLeadingText,
 				OnTapped: func() {
-					clipboard.Write(clipboard.FmtText, []byte(line))
+					// clipboard.Write(clipboard.FmtText, []byte(line))
 					// fmt.Println(line)
 					t.OnPasteFn(line)
 				},

@@ -9,7 +9,7 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"golang.design/x/clipboard"
+	// "golang.design/x/clipboard"
 )
 
 type SessionConfigWithName struct {
@@ -133,7 +133,7 @@ func (g *GUI) makeForm(config *SessionConfigWithName) fyne.CanvasObject {
 							Text: "复制",
 							Icon: theme.ContentCopyIcon(),
 							OnTapped: func() {
-								clipboard.Write(clipboard.FmtText, []byte(fbTokenLabel.Text))
+								// clipboard.Write(clipboard.FmtText, []byte(fbTokenLabel.Text))
 							},
 							IconPlacement: widget.ButtonIconLeadingText,
 						},
