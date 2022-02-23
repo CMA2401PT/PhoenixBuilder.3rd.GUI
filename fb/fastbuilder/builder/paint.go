@@ -2,8 +2,10 @@ package builder
 
 import (
 	"errors"
+	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/lucasb-eyer/go-colorful"
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 )
@@ -14,14 +16,17 @@ type ColorBlock struct {
 }
 
 func Paint(config *types.MainConfig, blc chan *types.Module) error {
-	path := config.Path
 	width := config.Width
 	height := config.Height
 	facing := config.Facing
 	pos := config.Position
-	img, err := imaging.Open(path)
+	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	if !hasK {
+		return I18n.ProcessNoSuchFileError(config.Path)
+	}
+	img, err := imaging.Decode(file)
 	if err != nil {
-		return I18n.ProcessSystemFileError(err)
+		return fmt.Errorf("Image Decode Error: %v", err)
 	}
 	if width != 0 && height != 0 {
 		img = imaging.Resize(img, width, height, imaging.Lanczos)

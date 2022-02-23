@@ -481,6 +481,81 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 	)
 }
 
+func (g *GUI) makePlotContent() fyne.CanvasObject {
+	pathOption, pathGet := g.makeReadPathOption("选择图片", "png/jpg", []string{".png", ".PNG", ".jpg", ".jpeg", ".JPG"})
+	facingFormItem, facingGet := g.makeSelectEntry([]string{"y", "x", "z"}, "朝向", "可选值有x,y,z")
+	mapXFormItem, mapXGet := g.makeIntEntry(1, "横向", "横向由几张地图构成")
+	mapZFormItem, mapZGet := g.makeIntEntry(1, "纵向", "纵向由几张地图构成")
+	mapYFormItem, mapYGet := g.makeIntEntry(0, "允许使用高度", ">40时通过阴影产生更多颜色")
+	c := container.NewDocTabs(
+		&container.TabItem{
+			Text: "图片",
+			Content: container.NewVBox(
+				pathOption,
+				widget.NewForm(facingFormItem),
+				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点(建议为64的奇数倍)"), g.startPos.UpdateBtn),
+				g.startPos.PosContent,
+				g.makeConfirmButton("制图", func() {
+					path, fp, err := pathGet()
+					if err != nil {
+						return
+					}
+					facing, err := facingGet()
+					if err != nil {
+						return
+					}
+					err = g.setStartPos()
+					if err != nil {
+						return
+					}
+					g.addMonkeyPath(path, fp)
+					g.sendCmdAndClose(fmt.Sprintf("plot -p %v -f %v", path, facing))
+				}),
+			),
+		},
+		&container.TabItem{
+			Text: "地图画",
+			Content: container.NewVBox(
+				pathOption,
+				widget.NewForm(mapXFormItem,
+					mapZFormItem,
+					mapYFormItem,
+				),
+				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点(建议为64的奇数倍)"), g.startPos.UpdateBtn),
+				g.startPos.PosContent,
+				g.makeConfirmButton("制图", func() {
+					path, fp, err := pathGet()
+					if err != nil {
+						return
+					}
+					mapX, err := mapXGet()
+					if err != nil {
+						return
+					}
+					mapZ, err := mapZGet()
+					if err != nil {
+						return
+					}
+					mapY, err := mapYGet()
+					if err != nil {
+						return
+					}
+					if mapY < 20 {
+						mapY = 0
+					}
+					err = g.setStartPos()
+					if err != nil {
+						return
+					}
+					g.addMonkeyPath(path, fp)
+					g.sendCmdAndClose(fmt.Sprintf("mapart -p %v -mapX %v -mapZ %v -mapY %v", path, mapX, mapZ, mapY))
+				}),
+			),
+		},
+	)
+	return c
+}
+
 func (g *GUI) makeMajorContent() fyne.CanvasObject {
 	return &widget.Accordion{
 		Items: []*widget.AccordionItem{
@@ -500,6 +575,10 @@ func (g *GUI) makeMajorContent() fyne.CanvasObject {
 			&widget.AccordionItem{
 				Title:  "建筑导入 (支持 schematic/bdx/mcacblock)",
 				Detail: g.makeBuildingContent(),
+			},
+			&widget.AccordionItem{
+				Title:  "图片及地图画",
+				Detail: g.makePlotContent(),
 			},
 		},
 	}
