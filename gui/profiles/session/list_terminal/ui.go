@@ -42,7 +42,8 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 	}
 	*t.data = append(*t.data, line)
 	var textObect fyne.CanvasObject
-	if width < 60 {
+	// TODO this should automatically be computed
+	if width < 45 {
 		textObect = widget.NewLabel(line)
 	} else {
 		l := widget.NewLabel(line)
@@ -51,7 +52,7 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 		fulldescription.Wrapping = fyne.TextWrapBreak
 		fulldescription.Hide()
 		fulldescription.Text = line
-		textObect = container.NewBorder(nil, fulldescription, nil, &widget.Button{
+		textObect = container.NewBorder(nil, fulldescription, &widget.Button{
 			Icon:          theme.VisibilityIcon(),
 			Importance:    widget.LowImportance,
 			IconPlacement: widget.ButtonIconTrailingText,
@@ -62,11 +63,11 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 					fulldescription.Hide()
 				}
 			},
-		}, l)
+		}, nil, l)
 	}
 	if canCopy {
 		t.list.Add(container.NewBorder(
-			nil, nil, nil, //widget.NewLabel(fmt.Sprintf("%d", len(*t.data)+1)),
+			nil, nil, //widget.NewLabel(fmt.Sprintf("%d", len(*t.data)+1)),
 			&widget.Button{
 				Icon:          theme.ContentCopyIcon(),
 				Importance:    widget.LowImportance,
@@ -74,9 +75,10 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 				OnTapped: func() {
 					// clipboard.Write(clipboard.FmtText, []byte(line))
 					// fmt.Println(line)
+					t.masterWindow.Clipboard().SetContent(line)
 					t.OnPasteFn(line)
 				},
-			}, textObect,
+			}, nil, textObect,
 		))
 	} else {
 		t.list.Add(textObect)

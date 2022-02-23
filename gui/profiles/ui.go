@@ -122,7 +122,7 @@ func (g *GUI) onEdit(i int) {
 		g.content.Refresh()
 		g.WriteBackConfigFile()
 	})
-	g.setContent(configForm.GetContent(g.setContent, g.getContent))
+	g.setContent(configForm.GetContent(g.masterWindow, g.setContent, g.getContent))
 }
 
 func (g *GUI) onDelete(i int) {
@@ -148,7 +148,7 @@ func (g *GUI) onNewProfile() {
 		g.content.Refresh()
 		g.WriteBackConfigFile()
 	})
-	g.setContent(configForm.GetContent(g.setContent, g.getContent))
+	g.setContent(configForm.GetContent(g.masterWindow, g.setContent, g.getContent))
 }
 
 func (g *GUI) ReadConfigFile() []*config.SessionConfigWithName {

@@ -18,11 +18,12 @@ type SessionConfigWithName struct {
 }
 
 type GUI struct {
-	setContent func(v fyne.CanvasObject)
-	getContent func() fyne.CanvasObject
-	content    fyne.CanvasObject
-	config     *SessionConfigWithName
-	onEditDone func()
+	setContent   func(v fyne.CanvasObject)
+	getContent   func() fyne.CanvasObject
+	content      fyne.CanvasObject
+	config       *SessionConfigWithName
+	onEditDone   func()
+	masterWindow fyne.Window
 }
 
 func New(config *SessionConfigWithName, onEditDone func(config *SessionConfigWithName)) *GUI {
@@ -136,6 +137,7 @@ func (g *GUI) makeForm(config *SessionConfigWithName) fyne.CanvasObject {
 								//glfw.SetClipboardString(fbTokenLabel.Text)
 								//fyne.Clipboard()
 								//clipboard.Write(clipboard.FmtText, []byte(fbTokenLabel.Text))
+								g.masterWindow.Clipboard().SetContent(fbTokenLabel.Text)
 							},
 							IconPlacement: widget.ButtonIconLeadingText,
 							Importance:    widget.LowImportance,
@@ -174,9 +176,10 @@ func (g *GUI) makeForm(config *SessionConfigWithName) fyne.CanvasObject {
 	)
 }
 
-func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func() fyne.CanvasObject) fyne.CanvasObject {
+func (g *GUI) GetContent(masterWindow fyne.Window, setContent func(v fyne.CanvasObject), getContent func() fyne.CanvasObject) fyne.CanvasObject {
 	g.setContent = setContent
 	g.getContent = getContent
+	g.masterWindow = masterWindow
 	fallbackContent := getContent()
 	doneBtns := container.NewVBox(&widget.Button{
 		Text: "取消",
