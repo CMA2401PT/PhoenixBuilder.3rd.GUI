@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"fyne.io/fyne/v2"
 	"github.com/google/uuid"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 )
@@ -117,3 +118,6 @@ func decideDelayThreshold() int {
 	// Will add system check later,so don't merge into other functions.
 	return 20000
 }
+
+// it's suck!
+var MonkeyPathFileExchanger map[string]fyne.URIReadCloser

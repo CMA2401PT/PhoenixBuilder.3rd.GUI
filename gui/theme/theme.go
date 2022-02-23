@@ -2,26 +2,33 @@ package theme
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 	"image/color"
 )
 
 type MyTheme struct {
 	defaultTheme                                 fyne.Theme
+	IsLight                                      binding.Bool
 	Regular, Bold, Italic, BoldItalic, Monospace fyne.Resource
 }
 
 func NewTheme() *MyTheme {
-	t := &MyTheme{}
+	isLight := false
+	t := &MyTheme{
+		IsLight: binding.BindBool(&isLight),
+	}
 	t.SetDefaultFont()
 	t.SetDark()
 	return t
 }
 
 func (t *MyTheme) SetDark() {
+	t.IsLight.Set(false)
 	t.defaultTheme = theme.DarkTheme()
 }
 func (t *MyTheme) SetLight() {
+	t.IsLight.Set(true)
 	t.defaultTheme = theme.LightTheme()
 }
 

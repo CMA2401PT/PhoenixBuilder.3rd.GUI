@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"os"
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 	bridge_fmt "phoenixbuilder_3rd_gui/fb/session/bridge/fmt"
@@ -39,9 +39,9 @@ func readBig(buf *bufio.Reader, out []byte) error {
 }
 
 func Acme(config *types.MainConfig, blc chan *types.Module) error {
-	file, err := os.Open(config.Path)
-	if err != nil {
-		return I18n.ProcessSystemFileError(err)
+	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	if !hasK {
+		return I18n.ProcessNoSuchFileError(config.Path)
 	}
 	defer file.Close()
 	gz, err := gzip.NewReader(file)

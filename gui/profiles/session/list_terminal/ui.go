@@ -44,7 +44,9 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 	var textObect fyne.CanvasObject
 	// TODO this should automatically be computed
 	if width < 45 {
-		textObect = widget.NewLabel(line)
+		l := widget.NewLabel(line)
+		l.Wrapping = fyne.TextTruncate
+		textObect = l
 	} else {
 		l := widget.NewLabel(line)
 		l.Wrapping = fyne.TextTruncate

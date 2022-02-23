@@ -28,13 +28,15 @@ type GUI struct {
 	// every ui element
 	content fyne.CanvasObject
 	// every ui element except return btn and two pos buttons
-	majorContent fyne.CanvasObject
+	majorContent  fyne.CanvasObject
+	addMonkeyPath func(path string, fp fyne.URIReadCloser)
 }
 
-func New(BotSession *bot_session.Session, sendCmdFn func(string)) *GUI {
+func New(BotSession *bot_session.Session, sendCmdFn func(string), addMonkeyPath func(path string, fp fyne.URIReadCloser)) *GUI {
 	gui := &GUI{
-		BotSession: BotSession,
-		sendCmdFn:  sendCmdFn,
+		BotSession:    BotSession,
+		sendCmdFn:     sendCmdFn,
+		addMonkeyPath: addMonkeyPath,
 	}
 	gui.makePosWidgets()
 	gui.majorContent = gui.makeMajorContent()
@@ -84,13 +86,13 @@ func (pw *PosWidget) SetPos(x, y, z int) {
 func (g *GUI) makePosWidgets() {
 	x, y, z := g.BotSession.GetPos()
 	startPos := NewPosWidget(x, y, z, &widget.Button{
-		Text:       "使用[" + g.BotSession.Config.RespondUser + "]的位置[get]",
+		Text:       "使用[" + g.BotSession.Config.RespondUser + "]的位置",
 		OnTapped:   func() { g.sendCmdFn("get") },
 		Importance: widget.HighImportance,
 	})
 	ex, ey, ez := g.BotSession.GetEndPos()
 	endPos := NewPosWidget(ex, ey, ez, &widget.Button{
-		Text:       "使用[" + g.BotSession.Config.RespondUser + "]的位置[get end]",
+		Text:       "使用[" + g.BotSession.Config.RespondUser + "]的位置",
 		OnTapped:   func() { g.sendCmdFn("get end") },
 		Importance: widget.HighImportance,
 	})
@@ -211,25 +213,32 @@ func (g *GUI) makeBoolOption(b bool, description string) (fyne.CanvasObject, fun
 	return widget.NewCheckWithData(description, bv), getter
 }
 
-func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filter []string) (fyne.CanvasObject, func() (string, error)) {
+func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filter []string) (fyne.CanvasObject, func() (string, fyne.URIReadCloser, error)) {
 	filePath := ""
 	bv := binding.BindString(&filePath)
+	var fp fyne.URIReadCloser
 	fileNameEntry := widget.NewEntryWithData(bv)
+	fileNameEntry.SetPlaceHolder(placeHolderStr)
 
-	getter := func() (string, error) {
+	getter := func() (string, fyne.URIReadCloser, error) {
 		gv, err := bv.Get()
+		if fp == nil {
+			err = fmt.Errorf("%v必须选择文件", description, err)
+			dialog.NewError(err, g.masterWindow).Show()
+		}
 		if err != nil {
 			err = fmt.Errorf("%v数据错误\n%v", description, err)
 			dialog.NewError(err, g.masterWindow).Show()
 		}
-		for _, f := range filter {
-			if strings.HasSuffix(gv, f) {
-				return gv, nil
-			}
-		}
-		err = fmt.Errorf("%v\n不具有后缀\n%v", gv, filter)
-		dialog.NewError(err, g.masterWindow).Show()
-		return "", err
+		//for _, f := range filter {
+		//	if strings.HasSuffix(gv, f) {
+		//		return gv, fp, nil
+		//	}
+		//}
+		//err = fmt.Errorf("%v\n不具有后缀\n%v", gv, filter)
+		//dialog.NewError(err, g.masterWindow).Show()
+		return gv, fp, nil
+		//return "", nil, err
 	}
 	return container.NewBorder(nil, nil, nil, &widget.Button{
 		Text: description,
@@ -243,7 +252,9 @@ func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filt
 					log.Println("Cancelled")
 					return
 				}
-				bv.Set(reader.URI().String())
+				//fake path string
+				bv.Set(reader.URI().String() + reader.URI().Extension())
+				fp = reader
 			}, g.masterWindow)
 			fd.SetFilter(storage.NewExtensionFileFilter(filter))
 			fd.Show()
@@ -424,7 +435,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 		container.NewGridWithColumns(2, widget.NewLabel("建筑起点位置"), g.startPos.UpdateBtn),
 		g.startPos.PosContent,
 		g.makeConfirmButton("导入", func() {
-			path, err := pathGet()
+			path, fp, err := pathGet()
 			if err != nil {
 				return
 			}
@@ -455,7 +466,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 			if err != nil {
 				return
 			}
-			path = strings.TrimPrefix(path, "file://")
+			//path = strings.TrimPrefix(path, "file://")
 			cmd := path + " " + flagStr
 			if strings.HasSuffix(path, "schematic") {
 				cmd = "schem -p " + cmd
@@ -464,6 +475,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 			} else if strings.HasSuffix(path, "bdx") {
 				cmd = "bdump -p " + cmd
 			}
+			g.addMonkeyPath(path, fp)
 			g.sendCmdAndClose(cmd)
 		}),
 	)
@@ -482,7 +494,7 @@ func (g *GUI) makeMajorContent() fyne.CanvasObject {
 				),
 			},
 			&widget.AccordionItem{
-				Title:  "几何指令 (在空间中构造简单几何体,圆,圈,球,线,椭圆,etc.)",
+				Title:  "几何指令 (在空间中构造简单几何体)",
 				Detail: g.makeGeoCmdContent(),
 			},
 			&widget.AccordionItem{

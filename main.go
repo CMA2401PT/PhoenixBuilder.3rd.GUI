@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"phoenixbuilder_3rd_gui/gui/assets"
+	"phoenixbuilder_3rd_gui/gui/global"
 	"phoenixbuilder_3rd_gui/gui/profiles"
 	my_theme "phoenixbuilder_3rd_gui/gui/theme"
 )
@@ -40,6 +41,9 @@ func main() {
 	//	dialog.ShowError(fmt.Errorf("无法加载图标：\n\n%v", err), topWindow)
 	//}
 	topWindow.SetMaster()
+	global.MakeThemeToggleBtn(app, appTheme)
+	global.MakeInformPopButton(topWindow)
+	global.MakeBannner("v0.0.1")
 
 	majorContent := container.NewMax()
 
@@ -56,9 +60,11 @@ func main() {
 	}
 
 	debugContent := makeDebugContent(app, setContent, getContent)
-	vsplit := container.NewVSplit(debugContent, majorContent)
-	vsplit.Offset = 0.05
-	topWindow.SetContent(vsplit)
+	debugContent.Hide()
+	//vsplit := container.NewVSplit(debugContent, majorContent)
+	//vsplit.Offset = 0.05
+	content := container.NewBorder(global.Banner, nil, nil, nil, majorContent)
+	topWindow.SetContent(content)
 
 	//onPanicFn := func(err error) {
 	//	dialog.ShowError(fmt.Errorf("发生了严重错误，程序即将退出：\n\n%v", err), topWindow)
@@ -151,6 +157,25 @@ func makeDebugContent(app fyne.App, setContent func(v fyne.CanvasObject), getCon
 				if err != nil {
 					dialog.ShowInformation("Cannot Save", fmt.Sprintf("%v\n%v", app.Storage().List(), err), topWindow)
 				}
+			}),
+			widget.NewButton("File&os.Open", func() {
+				dialog.NewFileOpen(func(closer fyne.URIReadCloser, err error) {
+					if err != nil {
+						dialog.ShowError(err, topWindow)
+					} else {
+						dialog.ShowInformation("Selected", closer.URI().Extension(), topWindow)
+						p := closer.URI().Extension()
+						//p = closer.URI().Path()
+						cp := p
+						//cp = strings.TrimPrefix(cp, "content://")
+						//_, err := os.Open(cp)
+						closer.Close()
+						if err != nil {
+							//fyne.Storage.Open()
+							dialog.ShowError(fmt.Errorf("os.Open error\n%v\n%v", cp, err), topWindow)
+						}
+					}
+				}, topWindow).Show()
 			}),
 		),
 	)

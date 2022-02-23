@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"phoenixbuilder_3rd_gui/gui/profiles/config"
 	"phoenixbuilder_3rd_gui/gui/profiles/session/list_terminal"
+	"phoenixbuilder_3rd_gui/gui/profiles/session/task_config"
 	"phoenixbuilder_3rd_gui/gui/profiles/session/tasks"
 	"strings"
 	"time"
@@ -35,15 +36,16 @@ type GUI struct {
 	cmdInputBar                     *widget.Entry
 	quitButton                      *widget.Button
 	createFromTemplateBtn           *widget.Button
+	taskSettingsButton              *widget.Button
 	titleRedirectBarHiderActivated  bool
-	titleRedirectBar                *widget.Label
+	titleRedirectBar                *widget.Entry
 	titleRedirectBarLastUpdatedTime time.Time
 	functionGroup                   *fyne.Container
 	taskMenu                        *tasks.GUI
-
-	alreadyClosed bool
-	terminateChan chan string
-	BotSession    *bot_session.Session
+	taskConfigMenu                  *task_config.GUI
+	alreadyClosed                   bool
+	terminateChan                   chan string
+	BotSession                      *bot_session.Session
 }
 
 func New(config *config.SessionConfigWithName, writeBackConfigFn func()) *GUI {
@@ -65,6 +67,10 @@ func (g *GUI) doneLoading() {
 	g.functionGroup.Show()
 	g.loadingIndicator.Hide()
 	g.loadingBar.Stop()
+	//g.functionGroup.Refresh()
+	//g.loadingIndicator.Refresh()
+	//g.loadingBar.Refresh()
+	g.content.Refresh()
 }
 
 func (g *GUI) closeGUI() {
@@ -135,17 +141,31 @@ func (g *GUI) makeToolContent() fyne.CanvasObject {
 	})
 	g.quitButton.Icon = theme.NavigateBackIcon()
 	g.quitButton.IconPlacement = widget.ButtonIconLeadingText
+	g.taskSettingsButton = widget.NewButton("任务及配置", func() {
+		//g.closeGUI()
+	})
+	g.taskSettingsButton.Icon = theme.SettingsIcon()
+	g.taskSettingsButton.IconPlacement = widget.ButtonIconLeadingText
 	g.createFromTemplateBtn = widget.NewButton("可用命令", func() {})
 	g.createFromTemplateBtn.Icon = theme.ContentAddIcon()
-	g.createFromTemplateBtn.IconPlacement = widget.ButtonIconTrailingText
+	g.createFromTemplateBtn.IconPlacement = widget.ButtonIconLeadingText
 	g.createFromTemplateBtn.Importance = widget.HighImportance
-	g.titleRedirectBar = widget.NewLabel("")
+	g.titleRedirectBar = widget.NewMultiLineEntry()
+	g.titleRedirectBar.Disable()
 	g.titleRedirectBar.Wrapping = fyne.TextWrapWord
 	g.titleRedirectBar.Hide()
 	g.functionGroup = container.NewVBox(
 		g.titleRedirectBar,
-		container.NewBorder(nil, nil,
-			g.quitButton, g.createFromTemplateBtn, g.cmdInputBar,
+		container.NewBorder(nil, nil, &widget.Button{
+			Text:       "",
+			Icon:       theme.CancelIcon(),
+			Importance: widget.MediumImportance,
+			OnTapped: func() {
+				g.cmdInputBar.SetText("")
+			},
+		}, nil, g.cmdInputBar),
+		container.NewGridWithColumns(3,
+			g.quitButton, g.taskSettingsButton, g.createFromTemplateBtn,
 		),
 	)
 
@@ -189,9 +209,13 @@ func (g *GUI) AfterMount() {
 			return
 		}
 		g.writeBackConfigFn()
-		g.taskMenu = tasks.New(g.BotSession, g.sendCmd)
+		g.taskMenu = tasks.New(g.BotSession, g.sendCmd, g.BotSession.NewMonkeyPath)
 		g.createFromTemplateBtn.OnTapped = func() {
 			g.setContent(g.taskMenu.GetContent(g.setContent, g.getContent, g.masterWindow))
+		}
+		g.taskConfigMenu = task_config.New()
+		g.taskSettingsButton.OnTapped = func() {
+			g.setContent(g.taskConfigMenu.GetContent(g.setContent, g.getContent, g.masterWindow))
 		}
 		g.terminateChan = terminateChan
 		g.doneLoading()

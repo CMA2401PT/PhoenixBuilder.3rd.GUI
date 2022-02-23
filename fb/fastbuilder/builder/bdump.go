@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"os"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/bdump"
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/world_provider"
@@ -31,9 +31,9 @@ func ReadBrString(br *bytes.Buffer) (string, error) {
 }
 
 func BDump(config *types.MainConfig, blc chan *types.Module) error {
-	file, err := os.OpenFile(config.Path, os.O_RDONLY, 0644)
-	if err != nil {
-		return I18n.ProcessSystemFileError(err)
+	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	if !hasK {
+		return I18n.ProcessNoSuchFileError(config.Path)
 	}
 	defer file.Close()
 	{

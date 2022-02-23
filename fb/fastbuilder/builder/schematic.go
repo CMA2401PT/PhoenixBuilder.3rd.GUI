@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"github.com/Tnze/go-mc/nbt"
 	"io/ioutil"
-	"os"
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 )
 
 func Schematic(config *types.MainConfig, blc chan *types.Module) error {
-	file, err := os.Open(config.Path)
-	if err != nil {
-		return I18n.ProcessSystemFileError(err)
+	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	if !hasK {
+		return I18n.ProcessNoSuchFileError(config.Path)
 	}
 	defer file.Close()
 	gzip, err := gzip.NewReader(file)
@@ -35,7 +35,7 @@ func Schematic(config *types.MainConfig, blc chan *types.Module) error {
 	}
 
 	if err := nbt.Unmarshal(buffer, &SchematicModule); err != nil {
-		// Won't return the error since it contains a large content that can 
+		// Won't return the error since it contains a large content that can
 		// crash the server after being sent.
 		return fmt.Errorf(I18n.T(I18n.Sch_FailedToResolve))
 	}
