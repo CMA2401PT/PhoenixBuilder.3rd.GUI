@@ -1,4 +1,4 @@
-package gui
+package theme
 
 import (
 	"image/color"
@@ -8,27 +8,27 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-type myTheme struct {
+type MyTheme struct {
 	defaultTheme                                 fyne.Theme
 	regular, bold, italic, boldItalic, monospace fyne.Resource
 }
 
-func (t *myTheme) SetDark() {
+func (t *MyTheme) SetDark() {
 	t.defaultTheme = theme.DarkTheme()
 }
-func (t *myTheme) SetLight() {
+func (t *MyTheme) SetLight() {
 	t.defaultTheme = theme.LightTheme()
 }
 
-func (t *myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
+func (t *MyTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
 	return t.defaultTheme.Color(name, variant)
 }
 
-func (t *myTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
+func (t *MyTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
 	return t.defaultTheme.Icon(name)
 }
 
-func (t *myTheme) Font(style fyne.TextStyle) fyne.Resource {
+func (t *MyTheme) Font(style fyne.TextStyle) fyne.Resource {
 	if style.Monospace {
 		return t.monospace
 	}
@@ -44,11 +44,11 @@ func (t *myTheme) Font(style fyne.TextStyle) fyne.Resource {
 	return t.regular
 }
 
-func (t *myTheme) Size(name fyne.ThemeSizeName) float32 {
+func (t *MyTheme) Size(name fyne.ThemeSizeName) float32 {
 	return t.defaultTheme.Size(name)
 }
 
-func (t *myTheme) SetFonts(regularFontPath string, monoFontPath string) {
+func (t *MyTheme) SetFonts(regularFontPath string, monoFontPath string) {
 	t.regular = theme.TextFont()
 	t.bold = theme.TextBoldFont()
 	t.italic = theme.TextItalicFont()
