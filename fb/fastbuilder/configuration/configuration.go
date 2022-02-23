@@ -1,9 +1,10 @@
 package configuration
 
 import (
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
+
 	"fyne.io/fyne/v2"
 	"github.com/google/uuid"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 )
 
 const (
@@ -120,4 +121,5 @@ func decideDelayThreshold() int {
 }
 
 // it's suck!
-var MonkeyPathFileExchanger map[string]fyne.URIReadCloser
+var MonkeyPathFileReader map[string]fyne.URIReadCloser
+var MonkeyPathFileWriter map[string]fyne.URIWriteCloser

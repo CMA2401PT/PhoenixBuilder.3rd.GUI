@@ -5,10 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/move"
+
 	"fyne.io/fyne/v2"
 	"github.com/google/uuid"
 	"github.com/pterm/pterm"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/move"
 
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/command"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
@@ -128,14 +129,19 @@ func NewSession(config *SessionConfig) *Session {
 		CmdSetCbFn:    func(X, Y, Z int) {},
 		CmdSetEndCbFn: func(X, Y, Z int) {},
 	}
-	configuration.MonkeyPathFileExchanger = make(map[string]fyne.URIReadCloser)
+	configuration.MonkeyPathFileReader = make(map[string]fyne.URIReadCloser)
+	configuration.MonkeyPathFileWriter = make(map[string]fyne.URIWriteCloser)
 	I18n.SelectedLanguage = config.Lang
 	I18n.UpdateLanguage()
 	return session
 }
 
-func (s *Session) NewMonkeyPath(path string, fp fyne.URIReadCloser) {
-	configuration.MonkeyPathFileExchanger[path] = fp
+func (s *Session) NewMonkeyPathReader(path string, fp fyne.URIReadCloser) {
+	configuration.MonkeyPathFileReader[path] = fp
+}
+
+func (s *Session) NewMonkeyPathWriter(path string, fp fyne.URIWriteCloser) {
+	configuration.MonkeyPathFileWriter[path] = fp
 }
 
 func (s *Session) Start() (terminateChan chan string, startErr error) {
@@ -158,6 +164,7 @@ func (s *Session) Start() (terminateChan chan string, startErr error) {
 
 	isStart = true
 	// when the session is terminated, we need to notify the caller
+	configuration.UserToken = s.Config.FBToken
 	c := s.afterStart()
 	return c, nil
 }

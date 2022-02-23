@@ -3,12 +3,13 @@ package builder
 import (
 	_ "embed"
 	"fmt"
-	"github.com/disintegration/imaging"
-	"github.com/lucasb-eyer/go-colorful"
 	"image"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
+	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
+
+	"github.com/disintegration/imaging"
+	"github.com/lucasb-eyer/go-colorful"
 )
 
 const (
@@ -221,7 +222,7 @@ func MapArt(config *types.MainConfig, blc chan *types.Module) error {
 
 	}
 	pos := config.Position
-	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	file, hasK := configuration.MonkeyPathFileReader[config.Path]
 	if !hasK {
 		return I18n.ProcessNoSuchFileError(config.Path)
 	}

@@ -169,9 +169,9 @@ func CreateExportTask(commandLine string, conn *minecraft.Conn) *Task {
 			Blocks: blocks,
 			//Blocks: nil,
 		}
-		if strings.LastIndex(cfg.Path, ".bdx") != len(cfg.Path)-4 || len(cfg.Path) < 4 {
-			cfg.Path += ".bdx"
-		}
+		// if strings.LastIndex(cfg.Path, ".bdx") != len(cfg.Path)-4 || len(cfg.Path) < 4 {
+		// 	cfg.Path += ".bdx"
+		// }
 		command.Tellraw(conn, "EXPORT >> Writing output file")
 		err, signerr := out.WriteToFile(cfg.Path)
 		if err != nil {

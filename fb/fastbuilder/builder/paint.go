@@ -3,11 +3,12 @@ package builder
 import (
 	"errors"
 	"fmt"
-	"github.com/disintegration/imaging"
-	"github.com/lucasb-eyer/go-colorful"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
+
+	"github.com/disintegration/imaging"
+	"github.com/lucasb-eyer/go-colorful"
 )
 
 type ColorBlock struct {
@@ -20,7 +21,7 @@ func Paint(config *types.MainConfig, blc chan *types.Module) error {
 	height := config.Height
 	facing := config.Facing
 	pos := config.Position
-	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	file, hasK := configuration.MonkeyPathFileReader[config.Path]
 	if !hasK {
 		return I18n.ProcessNoSuchFileError(config.Path)
 	}

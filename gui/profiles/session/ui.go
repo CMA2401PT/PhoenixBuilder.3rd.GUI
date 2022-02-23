@@ -9,14 +9,15 @@ import (
 	"strings"
 	"time"
 
+	bot_bridge_command "phoenixbuilder_3rd_gui/fb/fastbuilder/command"
+	bot_session "phoenixbuilder_3rd_gui/fb/session"
+	bot_bridge_fmt "phoenixbuilder_3rd_gui/fb/session/bridge/fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	bot_bridge_command "phoenixbuilder_3rd_gui/fb/fastbuilder/command"
-	bot_session "phoenixbuilder_3rd_gui/fb/session"
-	bot_bridge_fmt "phoenixbuilder_3rd_gui/fb/session/bridge/fmt"
 )
 
 type GUI struct {
@@ -209,7 +210,7 @@ func (g *GUI) AfterMount() {
 			return
 		}
 		g.writeBackConfigFn()
-		g.taskMenu = tasks.New(g.BotSession, g.sendCmd, g.BotSession.NewMonkeyPath)
+		g.taskMenu = tasks.New(g.BotSession, g.sendCmd, g.BotSession.NewMonkeyPathReader, g.BotSession.NewMonkeyPathWriter)
 		g.createFromTemplateBtn.OnTapped = func() {
 			g.setContent(g.taskMenu.GetContent(g.setContent, g.getContent, g.masterWindow))
 		}

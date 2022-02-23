@@ -85,6 +85,9 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 	} else {
 		t.list.Add(textObect)
 	}
+	if len(t.list.Objects) > 100 {
+		t.list.Objects = t.list.Objects[len(t.list.Objects)-30:]
+	}
 
 	t.list.Refresh()
 	t.content.ScrollToBottom()

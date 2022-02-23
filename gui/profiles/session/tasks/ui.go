@@ -28,15 +28,17 @@ type GUI struct {
 	// every ui element
 	content fyne.CanvasObject
 	// every ui element except return btn and two pos buttons
-	majorContent  fyne.CanvasObject
-	addMonkeyPath func(path string, fp fyne.URIReadCloser)
+	majorContent        fyne.CanvasObject
+	addMonkeyPathReader func(path string, fp fyne.URIReadCloser)
+	addMonkeyPathWriter func(path string, fp fyne.URIWriteCloser)
 }
 
-func New(BotSession *bot_session.Session, sendCmdFn func(string), addMonkeyPath func(path string, fp fyne.URIReadCloser)) *GUI {
+func New(BotSession *bot_session.Session, sendCmdFn func(string), addMonkeyPathReader func(path string, fp fyne.URIReadCloser), addMonkeyPathWriter func(path string, fp fyne.URIWriteCloser)) *GUI {
 	gui := &GUI{
-		BotSession:    BotSession,
-		sendCmdFn:     sendCmdFn,
-		addMonkeyPath: addMonkeyPath,
+		BotSession:          BotSession,
+		sendCmdFn:           sendCmdFn,
+		addMonkeyPathReader: addMonkeyPathReader,
+		addMonkeyPathWriter: addMonkeyPathWriter,
 	}
 	gui.makePosWidgets()
 	gui.majorContent = gui.makeMajorContent()
@@ -223,12 +225,14 @@ func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filt
 	getter := func() (string, fyne.URIReadCloser, error) {
 		gv, err := bv.Get()
 		if fp == nil {
-			err = fmt.Errorf("%v必须选择文件", description, err)
+			err = fmt.Errorf("%v必须选择文件", description)
 			dialog.NewError(err, g.masterWindow).Show()
+			return "", nil, err
 		}
 		if err != nil {
 			err = fmt.Errorf("%v数据错误\n%v", description, err)
 			dialog.NewError(err, g.masterWindow).Show()
+			return "", nil, err
 		}
 		//for _, f := range filter {
 		//	if strings.HasSuffix(gv, f) {
@@ -262,6 +266,57 @@ func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filt
 	}, fileNameEntry), getter
 }
 
+func (g *GUI) makeWritePathOption(description string, placeHolderStr string, filter []string) (fyne.CanvasObject, func() (string, fyne.URIWriteCloser, error)) {
+	filePath := ""
+	bv := binding.BindString(&filePath)
+	var fp fyne.URIWriteCloser
+	fileNameEntry := widget.NewEntryWithData(bv)
+	fileNameEntry.SetPlaceHolder(placeHolderStr)
+
+	getter := func() (string, fyne.URIWriteCloser, error) {
+		gv, err := bv.Get()
+		if fp == nil {
+			err = fmt.Errorf("%v必须选择文件", description)
+			dialog.NewError(err, g.masterWindow).Show()
+			return "", nil, err
+		}
+		if err != nil {
+			err = fmt.Errorf("%v数据错误\n%v", description, err)
+			dialog.NewError(err, g.masterWindow).Show()
+			return "", nil, err
+		}
+		//for _, f := range filter {
+		//	if strings.HasSuffix(gv, f) {
+		//		return gv, fp, nil
+		//	}
+		//}
+		//err = fmt.Errorf("%v\n不具有后缀\n%v", gv, filter)
+		//dialog.NewError(err, g.masterWindow).Show()
+		return gv, fp, nil
+		//return "", nil, err
+	}
+	return container.NewBorder(nil, nil, nil, &widget.Button{
+		Text: description,
+		OnTapped: func() {
+			fd := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
+				if err != nil {
+					dialog.ShowError(err, g.masterWindow)
+					return
+				}
+				if writer == nil {
+					log.Println("Cancelled")
+					return
+				}
+				//fake path string
+				bv.Set(writer.URI().String() + writer.URI().Extension())
+				fp = writer
+			}, g.masterWindow)
+			fd.SetFilter(storage.NewExtensionFileFilter(filter))
+			fd.Show()
+		},
+	}, fileNameEntry), getter
+}
+
 func (g *GUI) setStartPos() error {
 	x, y, z, err := g.startPos.GetPos()
 	if err != nil {
@@ -269,6 +324,16 @@ func (g *GUI) setStartPos() error {
 		return err
 	}
 	g.sendCmdFn(fmt.Sprintf("set %d %d %d", x, y, z))
+	return nil
+}
+
+func (g *GUI) setEndPos() error {
+	x, y, z, err := g.endPos.GetPos()
+	if err != nil {
+		dialog.NewError(fmt.Errorf("坐标错误\n%v", err), g.masterWindow).Show()
+		return err
+	}
+	g.sendCmdFn(fmt.Sprintf("setend %d %d %d", x, y, z))
 	return nil
 }
 
@@ -475,7 +540,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 			} else if strings.HasSuffix(path, "bdx") {
 				cmd = "bdump -p " + cmd
 			}
-			g.addMonkeyPath(path, fp)
+			g.addMonkeyPathReader(path, fp)
 			g.sendCmdAndClose(cmd)
 		}),
 	)
@@ -508,7 +573,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 					if err != nil {
 						return
 					}
-					g.addMonkeyPath(path, fp)
+					g.addMonkeyPathReader(path, fp)
 					g.sendCmdAndClose(fmt.Sprintf("plot -p %v -f %v", path, facing))
 				}),
 			),
@@ -547,7 +612,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 					if err != nil {
 						return
 					}
-					g.addMonkeyPath(path, fp)
+					g.addMonkeyPathReader(path, fp)
 					g.sendCmdAndClose(fmt.Sprintf("mapart -p %v -mapX %v -mapZ %v -mapY %v", path, mapX, mapZ, mapY))
 				}),
 			),
@@ -556,18 +621,46 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 	return c
 }
 
+func (g *GUI) makeExportContent() fyne.CanvasObject {
+	pathOption, pathGet := g.makeWritePathOption("导出到建筑文件", ".bdx", []string{".bdx"})
+	return container.NewVBox(
+		pathOption,
+		container.NewGridWithColumns(2, widget.NewLabel("导出建筑起点位置"), g.startPos.UpdateBtn),
+		g.startPos.PosContent,
+		container.NewGridWithColumns(2, widget.NewLabel("导出建筑终点位置"), g.endPos.UpdateBtn),
+		g.endPos.PosContent,
+		g.makeConfirmButton("导出", func() {
+			path, fp, err := pathGet()
+			if err != nil {
+				return
+			}
+			err = g.setStartPos()
+			if err != nil {
+				return
+			}
+			err = g.setEndPos()
+			if err != nil {
+				return
+			}
+			cmd := fmt.Sprintf("export -p %v", path)
+			g.addMonkeyPathWriter(path, fp)
+			g.sendCmdAndClose(cmd)
+		}),
+	)
+}
+
 func (g *GUI) makeMajorContent() fyne.CanvasObject {
 	return &widget.Accordion{
 		Items: []*widget.AccordionItem{
-			&widget.AccordionItem{
-				Title: "Debug",
-				Detail: container.NewVBox(
-					container.NewHBox(widget.NewLabel("Get    "), g.startPos.UpdateBtn),
-					g.startPos.PosContent,
-					container.NewHBox(widget.NewLabel("Get End"), g.endPos.UpdateBtn),
-					g.endPos.PosContent,
-				),
-			},
+			// &widget.AccordionItem{
+			// 	Title: "Debug",
+			// 	Detail: container.NewVBox(
+			// 		container.NewHBox(widget.NewLabel("Get    "), g.startPos.UpdateBtn),
+			// 		g.startPos.PosContent,
+			// 		container.NewHBox(widget.NewLabel("Get End"), g.endPos.UpdateBtn),
+			// 		g.endPos.PosContent,
+			// 	),
+			// },
 			&widget.AccordionItem{
 				Title:  "几何指令 (在空间中构造简单几何体)",
 				Detail: g.makeGeoCmdContent(),
@@ -579,6 +672,10 @@ func (g *GUI) makeMajorContent() fyne.CanvasObject {
 			&widget.AccordionItem{
 				Title:  "图片及地图画",
 				Detail: g.makePlotContent(),
+			},
+			&widget.AccordionItem{
+				Title:  "导出",
+				Detail: g.makeExportContent(),
 			},
 		},
 	}

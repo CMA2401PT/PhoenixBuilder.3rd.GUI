@@ -31,7 +31,7 @@ func ReadBrString(br *bytes.Buffer) (string, error) {
 }
 
 func BDump(config *types.MainConfig, blc chan *types.Module) error {
-	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	file, hasK := configuration.MonkeyPathFileReader[config.Path]
 	if !hasK {
 		return I18n.ProcessNoSuchFileError(config.Path)
 	}

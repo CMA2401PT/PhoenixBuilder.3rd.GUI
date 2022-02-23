@@ -3,15 +3,16 @@ package builder
 import (
 	"compress/gzip"
 	"fmt"
-	"github.com/Tnze/go-mc/nbt"
 	"io/ioutil"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
+	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
+
+	"github.com/Tnze/go-mc/nbt"
 )
 
 func Schematic(config *types.MainConfig, blc chan *types.Module) error {
-	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	file, hasK := configuration.MonkeyPathFileReader[config.Path]
 	if !hasK {
 		return I18n.ProcessNoSuchFileError(config.Path)
 	}

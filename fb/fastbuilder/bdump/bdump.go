@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/andybalholm/brotli"
-	"os"
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
+
+	"github.com/andybalholm/brotli"
 )
 
 type BDumpORIGINAL struct {
@@ -378,12 +379,16 @@ func (bdump *BDump) writeBlocks(w *bytes.Buffer) error {
 }
 
 func (bdump *BDump) WriteToFile(path string) (error, error) {
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0666)
-	if err != nil {
-		return fmt.Errorf("Failed to open file: %v", err), nil
+	file, hasK := configuration.MonkeyPathFileWriter[path]
+	if !hasK {
+		return fmt.Errorf("Failed to open file: %v", path), nil
 	}
+	// file, err := os.OpenFile(path, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0666)
+	// if err != nil {
+	// 	return fmt.Errorf("Failed to open file: %v", err), nil
+	// }
 	defer file.Close()
-	_, err = file.Write([]byte("BD@"))
+	_, err := file.Write([]byte("BD@"))
 	if err != nil {
 		return fmt.Errorf("Failed to write BRBDP file header"), nil
 	}

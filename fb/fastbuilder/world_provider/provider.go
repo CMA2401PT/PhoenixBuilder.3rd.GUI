@@ -98,11 +98,11 @@ func (p *OnlineWorldProvider) LoadChunk(position world.ChunkPos) (c *chunk.Chunk
 			select {
 			case inp = <-ChunkInput:
 				quickCache(inp)
-				bridge_fmt.Printf("Waiting for chunk: current: %d, %d | expected: %v\n", inp.ChunkX, inp.ChunkZ, position)
+				// bridge_fmt.Printf("Waiting for chunk: current: %d, %d | expected: %v\n", inp.ChunkX, inp.ChunkZ, position)
 				if inp.ChunkX != position[0] || inp.ChunkZ != position[1] {
 					continue
 				}
-			case <-time.After(2 * time.Second):
+			case <-time.After(5 * time.Second):
 				runtime.GC()
 				bridge_fmt.Printf("Expected chunk %v didn't arrive, wandering around\n", position)
 				wander(p.connection, position)

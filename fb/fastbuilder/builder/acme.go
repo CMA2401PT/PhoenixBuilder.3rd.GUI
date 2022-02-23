@@ -39,7 +39,7 @@ func readBig(buf *bufio.Reader, out []byte) error {
 }
 
 func Acme(config *types.MainConfig, blc chan *types.Module) error {
-	file, hasK := configuration.MonkeyPathFileExchanger[config.Path]
+	file, hasK := configuration.MonkeyPathFileReader[config.Path]
 	if !hasK {
 		return I18n.ProcessNoSuchFileError(config.Path)
 	}
