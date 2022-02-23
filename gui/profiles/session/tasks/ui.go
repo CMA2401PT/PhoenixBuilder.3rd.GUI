@@ -3,7 +3,7 @@ package tasks
 import (
 	"fmt"
 	"log"
-	bot_session "phoenixbuilder/session"
+	bot_session "phoenixbuilder_3rd_gui/fb/session"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -58,10 +58,6 @@ func NewPosWidget(x, y, z int, btn *widget.Button) *PosWidget {
 	w.WY = widget.NewEntryWithData(binding.IntToString(w.dY))
 	w.WZ = widget.NewEntryWithData(binding.IntToString(w.dZ))
 	w.PosContent = container.NewGridWithColumns(3, w.WX, w.WY, w.WZ)
-	// container.NewHBox(widget.NewLabel("X"), container.NewMax(w.WX)),
-	// container.NewHBox(widget.NewLabel("Y"), container.NewMax(w.WY)),
-	// container.NewHBox(widget.NewLabel("Z"), container.NewMax(w.WZ)),
-	// )
 	w.UpdateBtn = btn
 	return w
 }

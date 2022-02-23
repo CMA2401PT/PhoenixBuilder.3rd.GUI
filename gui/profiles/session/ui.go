@@ -2,10 +2,10 @@ package session
 
 import (
 	"fmt"
-	"strings"
 	"phoenixbuilder_3rd_gui/gui/profiles/config"
 	"phoenixbuilder_3rd_gui/gui/profiles/session/list_terminal"
 	"phoenixbuilder_3rd_gui/gui/profiles/session/tasks"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -13,10 +13,9 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-
-	bot_bridge_command "phoenixbuilder/fastbuilder/command"
-	bot_session "phoenixbuilder/session"
-	bot_bridge_fmt "phoenixbuilder/session/bridge/fmt"
+	bot_bridge_command "phoenixbuilder_3rd_gui/fb/fastbuilder/command"
+	bot_session "phoenixbuilder_3rd_gui/fb/session"
+	bot_bridge_fmt "phoenixbuilder_3rd_gui/fb/session/bridge/fmt"
 )
 
 type GUI struct {
@@ -132,7 +131,6 @@ func (g *GUI) makeToolContent() fyne.CanvasObject {
 		g.sendCmd(s)
 	}
 	g.quitButton = widget.NewButton("结束会话", func() {
-		// fmt.Println("Quit")
 		g.closeGUI()
 	})
 	g.quitButton.Icon = theme.NavigateBackIcon()

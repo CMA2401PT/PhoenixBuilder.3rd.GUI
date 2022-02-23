@@ -1,7 +1,8 @@
 package config
 
 import (
-	"phoenixbuilder/session"
+	//"golang.design/x/clipboard"
+	"phoenixbuilder_3rd_gui/fb/session"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -9,7 +10,6 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	// "golang.design/x/clipboard"
 )
 
 type SessionConfigWithName struct {
@@ -64,7 +64,7 @@ func (g *GUI) makeForm(config *SessionConfigWithName) fyne.CanvasObject {
 
 	fbTokenLabel := widget.NewEntryWithData(binding.BindString(&config.Config.FBToken))
 	fbTokenLabel.SetPlaceHolder("在第一次登录时自动计算")
-	fbTokenLabel.Disable()
+	//fbTokenLabel.Disable()
 
 	fbTokenLabel.Wrapping = fyne.TextTruncate
 	fbPasswordEntry.OnSubmitted = func(s string) {
@@ -128,14 +128,17 @@ func (g *GUI) makeForm(config *SessionConfigWithName) fyne.CanvasObject {
 				container.NewGridWithColumns(2, widget.NewLabel("密码:"), fbPasswordEntry),
 				container.NewGridWithColumns(2,
 					container.NewHBox(
-						widget.NewLabel("Token (无需填写):"),
+						widget.NewLabel("Token(不用填)"),
 						&widget.Button{
-							Text: "复制",
+							Text: "",
 							Icon: theme.ContentCopyIcon(),
 							OnTapped: func() {
-								// clipboard.Write(clipboard.FmtText, []byte(fbTokenLabel.Text))
+								//glfw.SetClipboardString(fbTokenLabel.Text)
+								//fyne.Clipboard()
+								//clipboard.Write(clipboard.FmtText, []byte(fbTokenLabel.Text))
 							},
 							IconPlacement: widget.ButtonIconLeadingText,
+							Importance:    widget.LowImportance,
 						},
 					), fbTokenLabel),
 			),
@@ -166,7 +169,7 @@ func (g *GUI) makeForm(config *SessionConfigWithName) fyne.CanvasObject {
 	)
 	majorContent.MultiOpen = true
 	return container.NewVBox(
-		container.NewGridWithColumns(2, widget.NewLabel("配置名称(目前仅能输入英文):"), configNameEntry),
+		container.NewGridWithColumns(2, widget.NewLabel("配置名称:"), configNameEntry),
 		majorContent,
 	)
 }

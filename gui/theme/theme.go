@@ -1,16 +1,21 @@
 package theme
 
 import (
-	"image/color"
-	"strings"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
+	"image/color"
 )
 
 type MyTheme struct {
 	defaultTheme                                 fyne.Theme
-	regular, bold, italic, boldItalic, monospace fyne.Resource
+	Regular, Bold, Italic, BoldItalic, Monospace fyne.Resource
+}
+
+func NewTheme() *MyTheme {
+	t := &MyTheme{}
+	t.SetDefaultFont()
+	t.SetDark()
+	return t
 }
 
 func (t *MyTheme) SetDark() {
@@ -30,52 +35,77 @@ func (t *MyTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
 
 func (t *MyTheme) Font(style fyne.TextStyle) fyne.Resource {
 	if style.Monospace {
-		return t.monospace
+		return t.Monospace
 	}
 	if style.Bold {
 		if style.Italic {
-			return t.boldItalic
+			return t.BoldItalic
 		}
-		return t.bold
+		return t.Bold
 	}
 	if style.Italic {
-		return t.italic
+		return t.Italic
 	}
-	return t.regular
+	return t.Regular
 }
 
 func (t *MyTheme) Size(name fyne.ThemeSizeName) float32 {
 	return t.defaultTheme.Size(name)
 }
 
-func (t *MyTheme) SetFonts(regularFontPath string, monoFontPath string) {
-	t.regular = theme.TextFont()
-	t.bold = theme.TextBoldFont()
-	t.italic = theme.TextItalicFont()
-	t.boldItalic = theme.TextBoldItalicFont()
-	t.monospace = theme.TextMonospaceFont()
-
-	if regularFontPath != "" {
-		t.regular = loadCustomFont(regularFontPath, "Regular", t.regular)
-		t.bold = loadCustomFont(regularFontPath, "Bold", t.bold)
-		t.italic = loadCustomFont(regularFontPath, "Italic", t.italic)
-		t.boldItalic = loadCustomFont(regularFontPath, "BoldItalic", t.boldItalic)
-	}
-	if monoFontPath != "" {
-		t.monospace = loadCustomFont(monoFontPath, "Regular", t.monospace)
-	} else {
-		t.monospace = t.regular
-	}
+func (t *MyTheme) SetDefaultFont() {
+	t.Regular = theme.TextFont()
+	t.Bold = theme.TextBoldFont()
+	t.Italic = theme.TextItalicFont()
+	t.BoldItalic = theme.TextBoldItalicFont()
+	t.Monospace = theme.TextMonospaceFont()
 }
 
-func loadCustomFont(env, variant string, fallback fyne.Resource) fyne.Resource {
-	variantPath := strings.Replace(env, "Regular", variant, -1)
-
-	res, err := fyne.LoadResourceFromPath(variantPath)
-	if err != nil {
-		fyne.LogError("Error loading specified font", err)
-		return fallback
-	}
-
-	return res
-}
+//
+//func (t *MyTheme) SetFontsFromAssets(regularFontPath string, monoFontPath string, onError func(err error)) {
+//	t.Regular = theme.TextFont()
+//	t.Bold = theme.TextBoldFont()
+//	t.Italic = theme.TextItalicFont()
+//	t.BoldItalic = theme.TextBoldItalicFont()
+//	t.Monospace = theme.TextMonospaceFont()
+//
+//	if regularFontPath != "" {
+//		t.Regular = loadCustomFontFromAssets(regularFontPath, "Regular", t.Regular, onError)
+//		t.Bold = loadCustomFontFromAssets(regularFontPath, "Bold", t.Bold, onError)
+//		t.Italic = loadCustomFontFromAssets(regularFontPath, "Italic", t.Italic, onError)
+//		t.BoldItalic = loadCustomFontFromAssets(regularFontPath, "BoldItalic", t.BoldItalic, onError)
+//	}
+//	if monoFontPath != "" {
+//		t.Monospace = loadCustomFontFromAssets(monoFontPath, "Regular", t.Monospace, onError)
+//	} else {
+//		t.Monospace = t.Regular
+//	}
+//}
+//
+//func loadCustomFontFromAssets(env, variant string, fallback fyne.Resource, onError func(err error)) fyne.Resource {
+//
+//	variantPath := strings.Replace(env, "Regular", variant, -1)
+//	assets, err := utils.LoadFromAssets(variantPath, variantPath)
+//	if err != nil {
+//		onError(errRead)
+//		return fallback
+//	}
+//
+//	f, err := asset.Open(variantPath)
+//	if err != nil {
+//		onError(err)
+//		return fallback
+//	}
+//
+//	buf, errRead := ioutil.ReadAll(f)
+//	f.Close()
+//	if errRead != nil {
+//		onError(errRead)
+//		return fallback
+//	}
+//
+//	return &fyne.StaticResource{
+//		StaticName:    variantPath,
+//		StaticContent: buf,
+//	}
+//}

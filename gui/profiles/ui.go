@@ -3,18 +3,15 @@ package profiles
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path"
 	"sort"
 
 	"gopkg.in/yaml.v3"
 
+	"phoenixbuilder_3rd_gui/fb/session"
 	"phoenixbuilder_3rd_gui/gui/profiles/config"
 	ui_session "phoenixbuilder_3rd_gui/gui/profiles/session"
 
 	"fyne.io/fyne/v2/dialog"
-
-	"phoenixbuilder/session"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -31,16 +28,16 @@ type GUI struct {
 	entryIndex   []int
 	configs      map[int]*config.SessionConfigWithName
 	counter      int
-	configPath   string
+	storage      fyne.Storage
 }
 
-func New(dataFolder string) *GUI {
-	configPath := path.Join(dataFolder, "config.yaml")
+func New(storage fyne.Storage) *GUI {
+	//configPath := path.Join(dataFolder, "config.yaml")
 	gui := &GUI{
 		entryIndex: make([]int, 0),
 		configs:    make(map[int]*config.SessionConfigWithName, 0),
 		counter:    0,
-		configPath: configPath,
+		storage:    storage,
 	}
 	return gui
 }
@@ -144,6 +141,7 @@ func (g *GUI) onLogin(i int) {
 
 func (g *GUI) onNewProfile() {
 	blankConfig := &config.SessionConfigWithName{Name: "未命名配置" + fmt.Sprintf("%d", g.counter), Config: session.NewConfig()}
+
 	configForm := config.New(blankConfig, func(filledConfig *config.SessionConfigWithName) {
 		g.newConfig(filledConfig)
 		g.updateEntryIndex()
@@ -154,20 +152,37 @@ func (g *GUI) onNewProfile() {
 }
 
 func (g *GUI) ReadConfigFile() []*config.SessionConfigWithName {
-	fp, err := os.OpenFile(g.configPath, os.O_RDONLY|os.O_CREATE, 0644)
-	if err != nil {
-		g.onPanic(fmt.Errorf("无法读取配置文件: %v,请检查权限或尝试手动删除该文件", g.configPath))
-	}
-	byteConfig, err := ioutil.ReadAll(fp)
-	if err != nil {
-		g.onPanic(fmt.Errorf("无法读取配置文件: %v,请检查权限或尝试手动删除该文件", g.configPath))
-	}
-	fp.Close()
 	plainConfigs := make([]*config.SessionConfigWithName, 0)
-	err = yaml.Unmarshal(byteConfig, &plainConfigs)
-	if err != nil {
-		g.onPanic(fmt.Errorf("无法解析配置文件: %v,文件已损坏,请尝试手动删除该文件", g.configPath))
+	open, err := g.storage.Open("config.yaml")
+	if err == nil {
+		defer open.Close()
+		byteConfig, err := ioutil.ReadAll(open)
+		if err != nil {
+			g.onPanic(fmt.Errorf("无法读取配置文件:\n %v\n请检查权限或尝试手动删除该文件", open.URI().String()))
+			return plainConfigs
+		}
+		err = yaml.Unmarshal(byteConfig, &plainConfigs)
+		if err != nil {
+			g.onPanic(fmt.Errorf("无法解析配置文件\n %v\n文件已损坏,请尝试手动删除该文件", open.URI().String()))
+			return plainConfigs
+		}
+		return plainConfigs
 	}
+
+	//fp, err := os.OpenFile(g.configPath, os.O_RDONLY|os.O_CREATE, 0644)
+	//if err != nil {
+	//	g.onPanic(fmt.Errorf("无法读取配置文件: %v,请检查权限或尝试手动删除该文件", g.configPath))
+	//}
+	//byteConfig, err := ioutil.ReadAll(fp)
+	//if err != nil {
+	//	g.onPanic(fmt.Errorf("无法读取配置文件: %v,请检查权限或尝试手动删除该文件", g.configPath))
+	//}
+	//fp.Close()
+	//plainConfigs := make([]*config.SessionConfigWithName, 0)
+	//err = yaml.Unmarshal(byteConfig, &plainConfigs)
+	//if err != nil {
+	//	g.onPanic(fmt.Errorf("无法解析配置文件: %v,文件已损坏,请尝试手动删除该文件", g.configPath))
+	//}
 	return plainConfigs
 }
 
@@ -176,26 +191,35 @@ func (g *GUI) WriteBackConfigFile() {
 	for _, c := range g.configs {
 		plainConfigs = append(plainConfigs, c)
 	}
-	os.Rename(g.configPath, g.configPath+".bak")
-	fp, err := os.OpenFile(g.configPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	defer fp.Close()
+	fp, err := g.storage.Save("config.yaml")
+	//if err != nil {
+	//	return
+	//}
+	//g.storage.Remove("config.yaml")
+	//fp, err := g.storage.Create("config.yaml")
 	if err != nil {
-		g.onPanic(fmt.Errorf("无法打开配置文件: %v,请检查权限或尝试手动删除该文件", g.configPath))
+		g.onPanic(fmt.Errorf("无法打开配置文件\n %v\n请检查权限或尝试手动删除该文件", fp.URI().String()))
 	}
+	//os.Rename(g.configPath, g.configPath+".bak")
+	//fp, err := os.OpenFile(g.configPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	//defer fp.Close()
+	//if err != nil {
+	//	g.onPanic(fmt.Errorf("无法打开配置文件: %v,请检查权限或尝试手动删除该文件", g.configPath))
+	//}
 	outBytes, err := yaml.Marshal(plainConfigs)
 	if err != nil {
 		g.onPanic(fmt.Errorf("无法序列化配置信息: %v,请联系开发者", plainConfigs))
 	}
 	_, err = fp.Write(outBytes)
 	if err != nil {
-		g.onPanic(fmt.Errorf("无法写入配置文件: %v,请检查权限或尝试手动删除该文件", g.configPath))
+		g.onPanic(fmt.Errorf("无法写入配置文件\n %v\n请检查权限或尝试手动删除该文件", fp.URI().String()))
 	}
 }
 
 func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func() fyne.CanvasObject, masterWindow fyne.Window) fyne.CanvasObject {
 	g.onPanic = func(err error) {
 		dialog.ShowError(fmt.Errorf("发生了严重错误，程序即将退出：\n\n%v", err), masterWindow)
-		os.Exit(-1)
+		// os.Exit(-1)
 	}
 	g.masterWindow = masterWindow
 	g.setContent = setContent
