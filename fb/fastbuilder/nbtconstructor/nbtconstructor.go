@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/command"
+	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/function"
+	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/minecraft"
 	"reflect"
 	"strings"
@@ -409,7 +411,13 @@ func InitNBTConstructor() {
 		SFMinSliceLen:   1,
 		FunctionContent: func(conn *minecraft.Conn, args []interface{}) {
 			path := args[0].(string)
-			content, err := ioutil.ReadFile(path)
+			file, hasK := configuration.MonkeyPathFileReader[path]
+			if !hasK {
+				command.Tellraw(conn, I18n.ProcessNoSuchFileError(path).Error())
+				return
+			}
+			defer file.Close()
+			content, err := ioutil.ReadAll(file)
 			if err != nil {
 				command.Tellraw(conn, fmt.Sprintf("Error: %v", err))
 				return

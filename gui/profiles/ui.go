@@ -168,6 +168,13 @@ func (g *GUI) ReadConfigFile() []*config.SessionConfigWithName {
 		}
 		return plainConfigs
 	}
+	fp, err := g.storage.Create("config.yaml")
+	if err != nil {
+		g.onPanic(fmt.Errorf("无法创建配置文件"))
+		return plainConfigs
+	} else {
+		fp.Close()
+	}
 
 	//fp, err := os.OpenFile(g.configPath, os.O_RDONLY|os.O_CREATE, 0644)
 	//if err != nil {

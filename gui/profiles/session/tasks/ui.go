@@ -621,6 +621,47 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 	return c
 }
 
+func (g *GUI) makeNbtContent() fyne.CanvasObject {
+	if !g.BotSession.Config.NBTConstructorEnabled {
+		return widget.NewLabel("应FB要求，你不能在该服务器使用此功能")
+	}
+	pathOption, pathGet := g.makeReadPathOption("选择nbt文件", "json/txt", []string{".json", ".txt"})
+	nbtEntry := widget.NewMultiLineEntry()
+	nbtEntry.SetPlaceHolder(`{
+		"name": "chest",
+		"nbt":{
+			"Findable:char":1,
+			"LootTable": "loot_tables/chests/end_city_treasure.json"
+			"display":{
+				"Name": "Lucky",
+				"Lore": ["+(DATA)"]
+			}
+		}
+	}
+	`)
+	return container.NewVBox(
+		widget.NewLabel("从文件构造nbt物品"),
+		pathOption,
+		g.makeConfirmButton("构造", func() {
+			path, fp, err := pathGet()
+			if err != nil {
+				return
+			}
+			cmd := fmt.Sprintf("construct %v", path)
+			g.addMonkeyPathReader(path, fp)
+			g.sendCmdAndClose(cmd)
+		}),
+		widget.NewSeparator(),
+		widget.NewLabel("从文字构造nbt物品"),
+		nbtEntry,
+		g.makeConfirmButton("构造", func() {
+			cmd := fmt.Sprintf("simpleconstruct %v", nbtEntry.Text)
+			g.sendCmdAndClose(cmd)
+		}),
+	)
+
+}
+
 func (g *GUI) makeExportContent() fyne.CanvasObject {
 	pathOption, pathGet := g.makeWritePathOption("导出到建筑文件", ".bdx", []string{".bdx"})
 	return container.NewVBox(
@@ -676,6 +717,10 @@ func (g *GUI) makeMajorContent() fyne.CanvasObject {
 			&widget.AccordionItem{
 				Title:  "导出",
 				Detail: g.makeExportContent(),
+			},
+			&widget.AccordionItem{
+				Title:  "构造nbt物品",
+				Detail: g.makeNbtContent(),
 			},
 		},
 	}

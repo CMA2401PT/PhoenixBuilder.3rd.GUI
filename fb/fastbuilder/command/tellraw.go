@@ -31,6 +31,7 @@ func TellRawRequest(target types.Target, lines ...string) string {
 		RawText: items,
 	}
 	content, _ := json.Marshal(final)
+	bridge_fmt.Printf("%s\n", content)
 	cmd := fmt.Sprintf("tellraw %v %s", target, content)
 	return cmd
 }
