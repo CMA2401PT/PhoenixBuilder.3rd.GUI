@@ -1,12 +1,13 @@
 package global
 
 import (
+	my_theme "phoenixbuilder_3rd_gui/gui/theme"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	my_theme "phoenixbuilder_3rd_gui/gui/theme"
 )
 
 var ThemeToggleBtn *ThemeToggler
@@ -85,7 +86,7 @@ func MakeBannner(build string) *fyne.Container {
 		return Banner
 	}
 	Banner = container.NewBorder(nil, &widget.Separator{},
-		widget.NewLabel("PhoenixBuilder.3rd.GUI "+build),
+		widget.NewLabel("FB.3rd.GUI (Alpha) "+build),
 		container.NewGridWithColumns(2, InformBtn, ThemeToggleBtn.Btn),
 		widget.NewLabel(""),
 	)
