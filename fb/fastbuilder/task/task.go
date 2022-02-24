@@ -2,8 +2,6 @@ package task
 
 import (
 	"fmt"
-	"github.com/google/uuid"
-	"go.uber.org/atomic"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/builder"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/command"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
@@ -17,6 +15,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	"go.uber.org/atomic"
 )
 
 const (
@@ -154,6 +155,7 @@ func CreateTask(commandLine string, conn *minecraft.Conn) *Task {
 		Type:          configuration.GlobalFullConfig().Global().TaskCreationType,
 		Config:        fcfg,
 	}
+	fmt.Println(task.Config.Delay())
 	taskid := task.TaskId
 	TaskMap.Store(taskid, task)
 	var asyncblockschannel chan *types.Module
