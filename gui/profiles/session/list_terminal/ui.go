@@ -67,7 +67,7 @@ func (t *Terminal) AppendNewLine(line string, canCopy bool) {
 			},
 		}, nil, l)
 	}
-	if canCopy {
+	if canCopy || width >= 45 {
 		t.list.Add(container.NewBorder(
 			nil, nil, //widget.NewLabel(fmt.Sprintf("%d", len(*t.data)+1)),
 			&widget.Button{
