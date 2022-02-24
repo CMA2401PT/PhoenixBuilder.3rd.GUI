@@ -493,6 +493,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 	strictOption, strictGet := g.makeBoolOption(true, "验证文件签名")
 	pathOption, pathGet := g.makeReadPathOption("选择建筑文件", ".schematic/.bdx/.mcacblock", []string{".schematic", ".bdx", ".mcacblock"})
 	return container.NewVBox(
+		widget.NewLabel("支持 schematic/bdx/mcacblock 文件"),
 		pathOption,
 		excludecommandsOption,
 		invalidatecommandsOption,
@@ -558,7 +559,8 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 			Content: container.NewVBox(
 				pathOption,
 				widget.NewForm(facingFormItem),
-				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点(建议为64的奇数倍)"), g.startPos.UpdateBtn),
+				widget.NewLabel("提示:起点为64的奇数倍时可以和地图对齐"),
+				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点"), g.startPos.UpdateBtn),
 				g.startPos.PosContent,
 				g.makeConfirmButton("制图", func() {
 					path, fp, err := pathGet()
@@ -703,11 +705,11 @@ func (g *GUI) makeMajorContent() fyne.CanvasObject {
 			// 	),
 			// },
 			&widget.AccordionItem{
-				Title:  "几何指令 (在空间中构造简单几何体)",
+				Title:  "几何指令",
 				Detail: g.makeGeoCmdContent(),
 			},
 			&widget.AccordionItem{
-				Title:  "建筑导入 (支持 schematic/bdx/mcacblock)",
+				Title:  "建筑导入 ",
 				Detail: g.makeBuildingContent(),
 			},
 			&widget.AccordionItem{
@@ -738,7 +740,7 @@ func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func()
 		},
 		Icon:          theme.CancelIcon(),
 		IconPlacement: widget.ButtonIconLeadingText,
-	}, nil, nil, container.NewVScroll(g.majorContent))
+	}, nil, nil, g.majorContent)
 
 	return g.content
 }

@@ -127,7 +127,7 @@ func makeAllTasksSetter() []fyne.CanvasObject {
 			task:               t,
 		}
 		delaySettingerGUI := MakeDelaySetterGUI(taskDelaySetter, false)
-		taskHandler := container.NewGridWithColumns(2,
+		taskHandler := container.NewHBox(
 			widget.NewLabel(fmt.Sprintf("Task-%v", k)),
 			container.NewGridWithColumns(3,
 				widget.NewButtonWithIcon("暂停", theme.MediaPauseIcon(), func() {
