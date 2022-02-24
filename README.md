@@ -23,37 +23,63 @@ https://github.com/df-mc/dragonfly
 - 字体来自 Consolas-with-Yahei （因为需要跨平台，所以内嵌了20+MB的字体文件）  
 https://github.com/crvdgc/Consolas-with-Yahei 
 
-## 编译
+## 运行
+你可以很简单的使用
+```
+go build main.go
+```
+编译出对应平台的程序
+
+## 编译发行版
+首先你需要安装必须的工具  
+```
+go get fyne.io/fyne/v2/cmd/fyne
+go install fyne.io/fyne/v2/cmd/fyne
+```
+
 ### 对于Windows/Linux/Mac
+
 ```
 fyne package -os linux
 fyne package -os windows
 fyne package -os darwin
 ```
-或者，也可以简单的go build 一下
-```
-go build main.go
-```
 ### 对于 android：
-1. 准备环境，ndk，adb，另外：
+1. 准备环境，ndk，adb，并设置环境变量 ANDROID_NDK_HOME
+2. 编译（windows上似乎无法正常工作）
 ```
-go get fyne.io/fyne/v2/cmd/fyne
-go install fyne.io/fyne/v2/cmd/fyne
+fyne package -os android/arm64 -appID phoenixbuilder.third.gui -release true
 ```
-2. 根据你的系统，可能需要一些额外操作，总之，当在命令行中输入 fyne 有输出即为成功
-3. 编译
-```
-fyne package -os android -appID my.domain.appname （官方说明，windows上似乎无法正常工作）
-fyne package -os android/arm64 -appID phoenixbuilder.third.gui -release true （个人建议）
-```
-4. 安装测试，windows上似乎无法正常工作
+3. 安装测试
 ```
 fyne install -os android
 ```
 ### 对于ios：
 你需要一个许可证文件：
 ```
-fyne release -os ios -certificate "Apple Distribution" -profile "My App Distribution" -appID "com.example.myapp"
+fyne release -os ios -certificate "Apple Distribution" -profile "My App Distribution" -appID "phoenixbuilder.third.gui"
+```
+
+## 另一种编译方式(fyne-cross)
+安装环境和工具
+```
+go get github.com/fyne-io/fyne-cross
+go install github.com/fyne-io/fyne-cross
+```
+安装 docker，并想办法确保网络连接
+编译 (输出在 fyne-cross/dist 目录下)
+```
+Linux:
+fyne-cross linux -arch=amd64 -app-build 126 -app-id "phoenixbuilder.third.gui" -app-version 0.0.2 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
+
+MacOS:
+fyne-cross darwin -arch=amd64 -app-build 126 -app-id "phoenixbuilder.third.gui" -app-version 0.0.2 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
+
+Windows:
+fyne-cross windows -arch=amd64 -app-build 126 -app-id "phoenixbuilder.third.gui" -app-version 0.0.2 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui.exe"
+
+Android:
+fyne-cross android -arch=arm64 -app-build 126 -app-id "phoenixbuilder.third.gui" -app-version 0.0.2 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
 ```
 ### 更多
 参考  

@@ -75,7 +75,7 @@ func MakeInformPopButton(win fyne.Window) *widget.Button {
 		Alignment:         0,
 		IconPlacement:     0,
 		OnTapped: func() {
-			dialog.NewInformation("说明", "本项目是PhoenixBuilder的第三方GUI版本\n项目的核心(FB)为:\nhttps://github.com/LNSSPsd/PhoenixBuilder\n界面开发者:CMA2401PT", win).Show()
+			dialog.NewInformation("说明", "本项目是PhoenixBuilder的第三方GUI版本\n项目的核心(FB)为:\nhttps://github.com/LNSSPsd/PhoenixBuilder\n核心功能开发者为: Ruphane, CAIMEO\n界面开发者: CMA2401PT", win).Show()
 		},
 	}
 	return InformBtn
