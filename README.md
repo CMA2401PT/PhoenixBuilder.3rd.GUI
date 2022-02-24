@@ -28,7 +28,7 @@ go install fyne.io/fyne/v2/cmd/fyne
 3. 编译
 ```
 fyne package -os android -appID my.domain.appname （官方说明，windows上似乎无法正常工作）
-fyne package -os android/arm64 -appID my.domain.appname （个人建议）
+fyne package -os android/arm64 -appID phoenixbuilder.third.gui -release true （个人建议）
 ```
 4. 安装测试，windows上似乎无法正常工作
 ```
@@ -39,3 +39,16 @@ fyne install -os android
 ```
 fyne release -os ios -certificate "Apple Distribution" -profile "My App Distribution" -appID "com.example.myapp"
 ```
+
+###对于Windows/Linux/Mac
+```
+fyne package -os linux
+fyne package -os windows
+fyne package -os darwin
+```
+或者，也可以简单的go build 一下
+### 更多
+参考  
+https://developer.fyne.io/started/cross-compiling   
+https://developer.fyne.io/started/packaging
+的编译说明

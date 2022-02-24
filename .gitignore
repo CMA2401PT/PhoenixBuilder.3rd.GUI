@@ -3,3 +3,5 @@
 *.bdx
 /data
 *.apk
+/FastBuilder.3rd.Gui.app
+*.zip
