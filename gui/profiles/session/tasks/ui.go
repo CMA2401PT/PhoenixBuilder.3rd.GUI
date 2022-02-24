@@ -738,7 +738,7 @@ func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func()
 		},
 		Icon:          theme.CancelIcon(),
 		IconPlacement: widget.ButtonIconLeadingText,
-	}, nil, nil, g.majorContent)
+	}, nil, nil, container.NewVScroll(g.majorContent))
 
 	return g.content
 }

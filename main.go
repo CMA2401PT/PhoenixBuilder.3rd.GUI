@@ -2,6 +2,11 @@ package main
 
 import (
 	"fmt"
+	"phoenixbuilder_3rd_gui/gui/assets"
+	"phoenixbuilder_3rd_gui/gui/global"
+	"phoenixbuilder_3rd_gui/gui/profiles"
+	my_theme "phoenixbuilder_3rd_gui/gui/theme"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -9,10 +14,6 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"phoenixbuilder_3rd_gui/gui/assets"
-	"phoenixbuilder_3rd_gui/gui/global"
-	"phoenixbuilder_3rd_gui/gui/profiles"
-	my_theme "phoenixbuilder_3rd_gui/gui/theme"
 )
 
 var topWindow fyne.Window
@@ -43,7 +44,7 @@ func main() {
 	topWindow.SetMaster()
 	global.MakeThemeToggleBtn(app, appTheme)
 	global.MakeInformPopButton(topWindow)
-	global.MakeBannner("v0.0.1")
+	global.MakeBannner("v0.0.2")
 
 	majorContent := container.NewMax()
 

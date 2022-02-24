@@ -1,6 +1,7 @@
 package task_config
 
 import (
+	"fmt"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/task"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
@@ -24,7 +25,6 @@ type GUI struct {
 
 func New() *GUI {
 	gui := &GUI{}
-	gui.majorContent = gui.makeMajorContent()
 	return gui
 }
 
@@ -113,21 +113,40 @@ func (tds *TaskDelaySetter) Break() {
 	tds.task.Break()
 }
 
-func (tds *TaskDelaySetter) checkDone() bool {
-	_, ok := task.TaskMap.Load(tds.id)
-	return !ok
-}
-
-func makeAllTasksSetter() []*TaskDelaySetter {
-	taskDelaySetters := make([]*TaskDelaySetter, 0)
+func makeAllTasksSetter() []fyne.CanvasObject {
+	taskDelaySetters := make([]fyne.CanvasObject, 0)
 	task.TaskMap.Range(func(k, v interface{}) bool {
-		_mirrorDelayConfig := *(v.(*task.Task).Config.Delay())
-		taskDelaySetters = append(taskDelaySetters, &TaskDelaySetter{
+		t := v.(*task.Task)
+		_mirrorDelayConfig := *(t.Config.Delay())
+		var content fyne.CanvasObject
+
+		taskDelaySetter := &TaskDelaySetter{
 			id:                 k,
 			mirrorDelayConfig:  &_mirrorDelayConfig,
-			mirrorCreationType: v.(*task.Task).Type,
-			task:               v.(*task.Task),
-		})
+			mirrorCreationType: t.Type,
+			task:               t,
+		}
+		delaySettingerGUI := MakeDelaySetterGUI(taskDelaySetter, false)
+		taskHandler := container.NewGridWithColumns(2,
+			widget.NewLabel(fmt.Sprintf("Task-%v", k)),
+			container.NewGridWithColumns(3,
+				widget.NewButtonWithIcon("暂停", theme.MediaPauseIcon(), func() {
+					t.Pause()
+				}),
+				widget.NewButtonWithIcon("恢复", theme.MediaPlayIcon(), func() {
+					t.Resume()
+				}),
+				widget.NewButtonWithIcon("取消", theme.MediaStopIcon(), func() {
+					t.Break()
+					content.Hide()
+				}),
+			),
+		)
+		content = container.NewVBox(
+			taskHandler,
+			delaySettingerGUI.content,
+		)
+		taskDelaySetters = append(taskDelaySetters, content)
 		return true
 	})
 	return taskDelaySetters
@@ -135,6 +154,7 @@ func makeAllTasksSetter() []*TaskDelaySetter {
 
 type DelaySetterGUI struct {
 	ds                    DelaySetter
+	taskTypeName          *widget.Label
 	taskTypeRG            *widget.RadioGroup
 	delayTypeRG           *widget.RadioGroup
 	typeContinuousContent fyne.CanvasObject
@@ -153,11 +173,17 @@ const DescriptionContinuous = "连续(每放置一个方块等待一会儿/推�
 const DescriptionDiscrete = "离散(每放置几个方块等待一会儿)"
 const DescriptionNone = "极限速度"
 
-func (dsg *DelaySetterGUI) UpdateUI() {
+func (dsg *DelaySetterGUI) UpdateUI(firstOpen bool) {
 	taskType := dsg.ds.CreationTypeGetter()
 	if taskType == types.TaskTypeSync {
+		if !dsg.isGlobal {
+			dsg.taskTypeName.Text += ": " + DescriptionSync
+		}
 		dsg.taskTypeRG.SetSelected(DescriptionSync)
 	} else if taskType == types.TaskTypeAsync {
+		if !dsg.isGlobal {
+			dsg.taskTypeName.Text += ": " + DescriptionAsync
+		}
 		dsg.taskTypeRG.SetSelected(DescriptionAsync)
 	}
 	DelayMode := dsg.ds.DelayConfigGetter().DelayMode
@@ -168,24 +194,30 @@ func (dsg *DelaySetterGUI) UpdateUI() {
 	} else if DelayMode == types.DelayModeNone {
 		dsg.delayTypeRG.SetSelected(DescriptionNone)
 	}
-	dsg.updateDelayContent(DelayMode)
+	dsg.updateDelayContent(DelayMode, firstOpen)
 }
 
-func (dsg *DelaySetterGUI) updateDelayContent(delayMode byte) {
+func (dsg *DelaySetterGUI) updateDelayContent(delayMode byte, firstOpen bool) {
 	switch delayMode {
 	case types.DelayModeContinuous:
-		dsg.bindDelay.Set(1000)
+		if !firstOpen {
+			dsg.bindDelay.Set(1000)
+		}
 		dsg.typeContinuousContent.Show()
 		dsg.typeDiscreteContent.Hide()
 		dsg.typeNoneContent.Hide()
 	case types.DelayModeDiscrete:
-		dsg.bindDelay.Set(15)
-		dsg.bindDelayThres.Set(20000)
+		if !firstOpen {
+			dsg.bindDelay.Set(15)
+			dsg.bindDelayThres.Set(20000)
+		}
 		dsg.typeContinuousContent.Hide()
 		dsg.typeDiscreteContent.Show()
 		dsg.typeNoneContent.Hide()
 	case types.DelayModeNone:
-		dsg.bindDelay.Set(0)
+		if firstOpen {
+			dsg.bindDelay.Set(0)
+		}
 		dsg.typeContinuousContent.Hide()
 		dsg.typeDiscreteContent.Hide()
 		dsg.typeNoneContent.Show()
@@ -250,7 +282,8 @@ func MakeDelaySetterGUI(ds DelaySetter, isGlobal bool) *DelaySetterGUI {
 		IconPlacement: widget.ButtonIconTrailingText,
 		Importance:    widget.HighImportance,
 	}
-	dsg.UpdateUI()
+	dsg.taskTypeName = widget.NewLabel("建造模式")
+	dsg.UpdateUI(true)
 	if isGlobal {
 		dsg.taskTypeRG.OnChanged = func(s string) {
 			if s == DescriptionAsync {
@@ -259,7 +292,10 @@ func MakeDelaySetterGUI(ds DelaySetter, isGlobal bool) *DelaySetterGUI {
 				dsg.ds.CreationTypeSetter(types.TaskTypeSync)
 			}
 		}
+		dsg.taskTypeName.Hide()
+
 	} else {
+		dsg.taskTypeRG.Hide()
 		dsg.taskTypeRG.Disable()
 	}
 	dsg.delayTypeRG.OnChanged = func(s string) {
@@ -271,13 +307,13 @@ func MakeDelaySetterGUI(ds DelaySetter, isGlobal bool) *DelaySetterGUI {
 		} else if s == DescriptionNone {
 			delayMode = types.DelayModeNone
 		}
-		dsg.updateDelayContent(byte(delayMode))
+		dsg.updateDelayContent(byte(delayMode), false)
 		currentDelay := dsg.ds.DelayConfigGetter()
 		currentDelay.DelayMode = delayMode
 		dsg.ds.DelayConfigSetter(currentDelay)
 	}
 	dsg.content = container.NewVBox(
-		widget.NewLabel("建造模式"),
+		dsg.taskTypeName,
 		dsg.taskTypeRG,
 		widget.NewSeparator(),
 		widget.NewLabel("延迟模式"),
@@ -294,14 +330,21 @@ func MakeDelaySetterGUI(ds DelaySetter, isGlobal bool) *DelaySetterGUI {
 func (g *GUI) makeMajorContent() fyne.CanvasObject {
 	globalSetter := makeGlobalDelaySetter()
 	globalSetterWidget := MakeDelaySetterGUI(globalSetter, true)
-	taskSetter := widget.NewLabel("还没有运行中的任务")
+	taskSetters := makeAllTasksSetter()
+	var taskContent fyne.CanvasObject
+	if len(taskSetters) == 0 {
+		taskContent = widget.NewLabel("还没有运行中的任务")
+	} else {
+		taskContent = container.NewVBox(taskSetters...)
+	}
+
 	return container.NewVBox(
 		widget.NewCard("全局配置", "对新任务生效", globalSetterWidget.content),
 		// widget.NewLabelWithStyle("全局配置(对新任务生效)", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		// globalSetterWidget.content,
 		// widget.NewSeparator(),
 		widget.NewLabelWithStyle("现有任务", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		widget.NewCard("现有任务", "调整正在运行的任务", taskSetter),
+		widget.NewCard("现有任务", "调整正在运行的任务", taskContent),
 	)
 }
 
@@ -310,6 +353,7 @@ func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func()
 	g.setContent = setContent
 	g.getContent = getContent
 	g.masterWindow = masterWindow
+	g.majorContent = g.makeMajorContent()
 	g.content = container.NewBorder(nil, &widget.Button{
 		Text: "关闭",
 		OnTapped: func() {
