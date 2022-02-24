@@ -80,6 +80,10 @@ fyne-cross windows -arch=amd64 -app-build 126 -app-id "phoenixbuilder.third.gui"
 
 Android:
 fyne-cross android -arch=arm64 -app-build 126 -app-id "phoenixbuilder.third.gui" -app-version 0.0.2 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
+
+IOS:
+你需要创建一个开发者账号，并建立一个同名 Xcode项目"phoenixbuilder.third.gui"接着
+fyne-cross ios -app-build 126 -app-id "phoenixbuilder.third.gui" -app-version 0.0.2 -icon unbundled_assets/Icon.png  -name "FastBuilder-3rd-Gui"
 ```
 ### 更多
 参考  

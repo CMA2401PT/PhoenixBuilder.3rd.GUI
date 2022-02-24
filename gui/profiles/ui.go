@@ -198,7 +198,21 @@ func (g *GUI) WriteBackConfigFile() {
 	for _, c := range g.configs {
 		plainConfigs = append(plainConfigs, c)
 	}
-	fp, err := g.storage.Save("config.yaml")
+	hasFileFlag := false
+	for _, fn := range g.storage.List() {
+		if fn == "config.yaml" {
+			hasFileFlag = true
+			break
+		}
+	}
+	var fp fyne.URIWriteCloser
+	var err error
+	if hasFileFlag {
+		fp, err = g.storage.Save("config.yaml")
+	} else {
+		fp, err = g.storage.Create("config.yaml")
+	}
+
 	//if err != nil {
 	//	return
 	//}
@@ -206,6 +220,7 @@ func (g *GUI) WriteBackConfigFile() {
 	//fp, err := g.storage.Create("config.yaml")
 	if err != nil {
 		g.onPanic(fmt.Errorf("无法打开配置文件\n %v\n请检查权限或尝试手动删除该文件", fp.URI().String()))
+		return
 	}
 	//os.Rename(g.configPath, g.configPath+".bak")
 	//fp, err := os.OpenFile(g.configPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -216,10 +231,12 @@ func (g *GUI) WriteBackConfigFile() {
 	outBytes, err := yaml.Marshal(plainConfigs)
 	if err != nil {
 		g.onPanic(fmt.Errorf("无法序列化配置信息: %v,请联系开发者", plainConfigs))
+		return
 	}
 	_, err = fp.Write(outBytes)
 	if err != nil {
 		g.onPanic(fmt.Errorf("无法写入配置文件\n %v\n请检查权限或尝试手动删除该文件", fp.URI().String()))
+		return
 	}
 }
 
