@@ -51,7 +51,7 @@ fyne package -os android/arm64 -appID phoenixbuilder.third.gui -release true （
 fyne install -os android
 ```
 ### 对于ios：
-没有试过，官网说：
+你需要一个许可证文件：
 ```
 fyne release -os ios -certificate "Apple Distribution" -profile "My App Distribution" -appID "com.example.myapp"
 ```
