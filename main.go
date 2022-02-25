@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"phoenixbuilder_3rd_gui/gui/assets"
 	"phoenixbuilder_3rd_gui/gui/global"
 	"phoenixbuilder_3rd_gui/gui/profiles"
@@ -23,6 +24,11 @@ func main() {
 	app := app.NewWithID("gui.3rd.PhoenixBuilder")
 	appStorage := app.Storage()
 	//appStorage.Create("config.yaml")
+
+	go func() {
+		// popup a network permission dialog
+		http.Get("http://captive.apple.com")
+	}()
 
 	appTheme = my_theme.NewTheme()
 	setThemeChineseFont(appTheme)
