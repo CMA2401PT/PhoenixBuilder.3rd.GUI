@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/move"
 
-	"fyne.io/fyne/v2"
 	"github.com/google/uuid"
 	"github.com/pterm/pterm"
 
@@ -129,20 +128,20 @@ func NewSession(config *SessionConfig) *Session {
 		CmdSetCbFn:    func(X, Y, Z int) {},
 		CmdSetEndCbFn: func(X, Y, Z int) {},
 	}
-	configuration.MonkeyPathFileReader = make(map[string]fyne.URIReadCloser)
-	configuration.MonkeyPathFileWriter = make(map[string]fyne.URIWriteCloser)
+	// configuration.MonkeyPathFileReader = make(map[string]fyne.URIReadCloser)
+	// configuration.MonkeyPathFileWriter = make(map[string]fyne.URIWriteCloser)
 	I18n.SelectedLanguage = config.Lang
 	I18n.UpdateLanguage()
 	return session
 }
 
-func (s *Session) NewMonkeyPathReader(path string, fp fyne.URIReadCloser) {
-	configuration.MonkeyPathFileReader[path] = fp
-}
+// func (s *Session) NewMonkeyPathReader(path string, fp fyne.URIReadCloser) {
+// 	configuration.MonkeyPathFileReader[path] = fp
+// }
 
-func (s *Session) NewMonkeyPathWriter(path string, fp fyne.URIWriteCloser) {
-	configuration.MonkeyPathFileWriter[path] = fp
-}
+// func (s *Session) NewMonkeyPathWriter(path string, fp fyne.URIWriteCloser) {
+// 	configuration.MonkeyPathFileWriter[path] = fp
+// }
 
 func (s *Session) Start() (terminateChan chan string, startErr error) {
 	// we need to make sure no multiple session is running
@@ -341,7 +340,7 @@ func (s *Session) routine(c chan string) {
 		// hidden in the code
 		r := recover()
 		if r != nil {
-			terminateReason = fmt.Sprintf("Session terminated, because a panic occoured: \n%v", r)
+			terminateReason = fmt.Sprintf("Session terminated\n because a panic occoured in routine: \n%v", r)
 		}
 		s.close()
 		c <- terminateReason
@@ -351,6 +350,16 @@ func (s *Session) routine(c chan string) {
 		if s.Config.MuteWorldChat {
 			return
 		}
+		defer func() {
+			// we don't want the whole program to exit when there is a panic
+			// hidden in the code
+			r := recover()
+			if r != nil {
+				terminateReason = fmt.Sprintf("Session terminated\n because a panic occoured in World Chat: \n%v", r)
+			}
+			s.close()
+			c <- terminateReason
+		}()
 		for {
 			select {
 			case csmsg := <-s.worldChatChannel:
@@ -362,6 +371,16 @@ func (s *Session) routine(c chan string) {
 	}()
 
 	go func() {
+		defer func() {
+			// we don't want the whole program to exit when there is a panic
+			// hidden in the code
+			r := recover()
+			if r != nil {
+				terminateReason = fmt.Sprintf("Session terminated\n because a panic occoured in Process Function: \n%v", r)
+			}
+			s.close()
+			c <- terminateReason
+		}()
 		for {
 			select {
 			case cmd := <-s.cmdChan:

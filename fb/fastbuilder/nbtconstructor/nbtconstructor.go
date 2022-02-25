@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/command"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/function"
 	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/minecraft"
+	bridge_fmt "phoenixbuilder_3rd_gui/fb/session/bridge/fmt"
 	"reflect"
 	"strings"
+
+	"fyne.io/fyne/v2/storage"
 )
 
 const (
@@ -411,9 +413,20 @@ func InitNBTConstructor() {
 		SFMinSliceLen:   1,
 		FunctionContent: func(conn *minecraft.Conn, args []interface{}) {
 			path := args[0].(string)
-			file, hasK := configuration.MonkeyPathFileReader[path]
-			if !hasK {
-				command.Tellraw(conn, I18n.ProcessNoSuchFileError(path).Error())
+			// file, hasK := configuration.MonkeyPathFileReader[path]
+			// if !hasK {
+			// 	command.Tellraw(conn, I18n.ProcessNoSuchFileError(path).Error())
+			// 	return
+			// }
+			// defer file.Close()
+			uri, err := storage.ParseURI(path)
+			if err != nil {
+				bridge_fmt.Printf(I18n.ProcessNoSuchFileError(path).Error())
+				return
+			}
+			file, err := storage.Reader(uri)
+			if err != nil {
+				bridge_fmt.Printf(I18n.ProcessNoSuchFileError(path).Error())
 				return
 			}
 			defer file.Close()

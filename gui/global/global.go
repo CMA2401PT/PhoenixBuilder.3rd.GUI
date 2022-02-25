@@ -43,7 +43,7 @@ func MakeThemeToggleBtn(app fyne.App, appTheme *my_theme.MyTheme) *ThemeToggler 
 		DisableableWidget: widget.DisableableWidget{},
 		Text:              "",
 		Icon:              initIcon,
-		Importance:        widget.MediumImportance,
+		Importance:        widget.LowImportance,
 		Alignment:         0,
 		IconPlacement:     0,
 		OnTapped: func() {
@@ -71,7 +71,7 @@ func MakeInformPopButton(win fyne.Window) *widget.Button {
 		DisableableWidget: widget.DisableableWidget{},
 		Text:              "",
 		Icon:              theme.InfoIcon(),
-		Importance:        widget.MediumImportance,
+		Importance:        widget.LowImportance,
 		Alignment:         0,
 		IconPlacement:     0,
 		OnTapped: func() {

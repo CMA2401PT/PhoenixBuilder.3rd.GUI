@@ -20,6 +20,7 @@ type GUI struct {
 	getContent   func() fyne.CanvasObject
 	origContent  fyne.CanvasObject
 	masterWindow fyne.Window
+	app          fyne.App
 
 	BotSession *bot_session.Session
 	sendCmdFn  func(string)
@@ -28,17 +29,18 @@ type GUI struct {
 	// every ui element
 	content fyne.CanvasObject
 	// every ui element except return btn and two pos buttons
-	majorContent        fyne.CanvasObject
-	addMonkeyPathReader func(path string, fp fyne.URIReadCloser)
-	addMonkeyPathWriter func(path string, fp fyne.URIWriteCloser)
+	majorContent fyne.CanvasObject
+	// addMonkeyPathReader func(path string, fp fyne.URIReadCloser)
+	// addMonkeyPathWriter func(path string, fp fyne.URIWriteCloser)
 }
 
-func New(BotSession *bot_session.Session, sendCmdFn func(string), addMonkeyPathReader func(path string, fp fyne.URIReadCloser), addMonkeyPathWriter func(path string, fp fyne.URIWriteCloser)) *GUI {
+func New(BotSession *bot_session.Session, sendCmdFn func(string), app fyne.App) *GUI {
 	gui := &GUI{
-		BotSession:          BotSession,
-		sendCmdFn:           sendCmdFn,
-		addMonkeyPathReader: addMonkeyPathReader,
-		addMonkeyPathWriter: addMonkeyPathWriter,
+		BotSession: BotSession,
+		sendCmdFn:  sendCmdFn,
+		// addMonkeyPathReader: addMonkeyPathReader,
+		app: app,
+		// addMonkeyPathWriter: addMonkeyPathWriter,
 	}
 	gui.makePosWidgets()
 	gui.majorContent = gui.makeMajorContent()
@@ -215,33 +217,35 @@ func (g *GUI) makeBoolOption(b bool, description string) (fyne.CanvasObject, fun
 	return widget.NewCheckWithData(description, bv), getter
 }
 
-func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filter []string) (fyne.CanvasObject, func() (string, fyne.URIReadCloser, error)) {
+func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filter []string) (fyne.CanvasObject, func() (string, string, error)) {
 	filePath := ""
 	bv := binding.BindString(&filePath)
-	var fp fyne.URIReadCloser
+	var gExt string
+	// var fp fyne.URIReadCloser
 	fileNameEntry := widget.NewEntryWithData(bv)
+	fileNameEntry.Disable()
 	fileNameEntry.SetPlaceHolder(placeHolderStr)
 
-	getter := func() (string, fyne.URIReadCloser, error) {
+	getter := func() (string, string, error) {
 		gv, err := bv.Get()
-		if fp == nil {
+		if gv == "" {
 			err = fmt.Errorf("%v必须选择文件", description)
 			dialog.NewError(err, g.masterWindow).Show()
-			return "", nil, err
+			return "", "", err
 		}
 		if err != nil {
 			err = fmt.Errorf("%v数据错误\n%v", description, err)
 			dialog.NewError(err, g.masterWindow).Show()
-			return "", nil, err
+			return "", "", err
 		}
-		//for _, f := range filter {
-		//	if strings.HasSuffix(gv, f) {
-		//		return gv, fp, nil
-		//	}
-		//}
-		//err = fmt.Errorf("%v\n不具有后缀\n%v", gv, filter)
-		//dialog.NewError(err, g.masterWindow).Show()
-		return gv, fp, nil
+		for _, f := range filter {
+			if f == gExt {
+				return gv, gExt, nil
+			}
+		}
+		err = fmt.Errorf("%v\n不具有后缀\n%v", gExt, filter)
+		dialog.NewError(err, g.masterWindow).Show()
+		return "", "", err
 		//return "", nil, err
 	}
 	return container.NewBorder(nil, nil, nil, &widget.Button{
@@ -257,43 +261,93 @@ func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filt
 					return
 				}
 				//fake path string
-				bv.Set(reader.URI().String() + reader.URI().Extension())
-				fp = reader
+				ext := reader.URI().Extension()
+				for _, e := range filter {
+					if ext == e {
+						gExt = ext
+						uri := reader.URI().String()
+						bv.Set(uri)
+						reader.Close()
+						// buf, err := ioutil.ReadAll(reader)
+						// defer reader.Close()
+						// if err != nil {
+						// 	dialog.ShowError(err, g.masterWindow)
+						// 	return
+						// }
+						// ss := strings.Split(reader.URI().String(), "/")
+						// shortName := ss[len(ss)-1]
+						// shortName = shortName + ext
+						// existFlag := false
+						// for _, f := range g.app.Storage().List() {
+						// 	if f == shortName {
+						// 		existFlag = true
+						// 		break
+						// 	}
+						// }
+						// var writer fyne.URIWriteCloser
+						// if existFlag {
+						// 	writer, err = g.app.Storage().Save(shortName)
+						// } else {
+						// 	writer, err = g.app.Storage().Create(shortName)
+						// }
+						// if err != nil {
+						// 	dialog.ShowError(err, g.masterWindow)
+						// 	return
+						// }
+						// _, err = writer.Write(buf)
+						// defer writer.Close()
+						// if err != nil {
+						// 	dialog.ShowError(err, g.masterWindow)
+						// 	return
+						// }
+						// bv.Set(shortName)
+						// bytes.NewReader(buf)
+						// appStorageReader, err := g.app.Storage().Open(shortName)
+						// if err != nil {
+						// 	dialog.ShowError(err, g.masterWindow)
+						// 	return
+						// }
+						// fp = nil
+						return
+					}
+				}
+
 			}, g.masterWindow)
-			fd.SetFilter(storage.NewExtensionFileFilter(filter))
+			// fd.SetFilter(storage.NewExtensionFileFilter(filter))
 			fd.Show()
 		},
 	}, fileNameEntry), getter
 }
 
-func (g *GUI) makeWritePathOption(description string, placeHolderStr string, filter []string) (fyne.CanvasObject, func() (string, fyne.URIWriteCloser, error)) {
+func (g *GUI) makeWritePathOption(description string, placeHolderStr string, filter []string) (fyne.CanvasObject, func() (string, string, error)) {
 	filePath := ""
 	bv := binding.BindString(&filePath)
-	var fp fyne.URIWriteCloser
+	var gExt string
+	// var fp fyne.URIReadCloser
 	fileNameEntry := widget.NewEntryWithData(bv)
+	fileNameEntry.Disable()
 	fileNameEntry.SetPlaceHolder(placeHolderStr)
 
-	getter := func() (string, fyne.URIWriteCloser, error) {
+	getter := func() (string, string, error) {
 		gv, err := bv.Get()
-		if fp == nil {
+		if gv == "" {
 			err = fmt.Errorf("%v必须选择文件", description)
 			dialog.NewError(err, g.masterWindow).Show()
-			return "", nil, err
+			return "", "", err
 		}
 		if err != nil {
 			err = fmt.Errorf("%v数据错误\n%v", description, err)
 			dialog.NewError(err, g.masterWindow).Show()
-			return "", nil, err
+			return "", "", err
 		}
-		//for _, f := range filter {
-		//	if strings.HasSuffix(gv, f) {
-		//		return gv, fp, nil
-		//	}
-		//}
-		//err = fmt.Errorf("%v\n不具有后缀\n%v", gv, filter)
-		//dialog.NewError(err, g.masterWindow).Show()
-		return gv, fp, nil
-		//return "", nil, err
+		for _, f := range filter {
+			if f == gExt {
+				return gv, gExt, nil
+			}
+		}
+		err = fmt.Errorf("%v\n不具有后缀\n%v", gExt, filter)
+		dialog.NewError(err, g.masterWindow).Show()
+		return "", "", err
 	}
 	return container.NewBorder(nil, nil, nil, &widget.Button{
 		Text: description,
@@ -307,9 +361,18 @@ func (g *GUI) makeWritePathOption(description string, placeHolderStr string, fil
 					log.Println("Cancelled")
 					return
 				}
-				//fake path string
-				bv.Set(writer.URI().String() + writer.URI().Extension())
-				fp = writer
+				ext := writer.URI().Extension()
+				for _, e := range filter {
+					if ext == e {
+						gExt = ext
+						uri := writer.URI().String()
+						bv.Set(uri)
+						writer.Close()
+						return
+					}
+				}
+				err = fmt.Errorf("文件结尾需要有以下后缀之一\n%v", filter)
+				dialog.NewError(err, g.masterWindow).Show()
 			}, g.masterWindow)
 			fd.SetFilter(storage.NewExtensionFileFilter(filter))
 			fd.Show()
@@ -501,7 +564,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 		container.NewGridWithColumns(2, widget.NewLabel("建筑起点位置"), g.startPos.UpdateBtn),
 		g.startPos.PosContent,
 		g.makeConfirmButton("导入", func() {
-			path, fp, err := pathGet()
+			path, ext, err := pathGet()
 			if err != nil {
 				return
 			}
@@ -534,14 +597,14 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 			}
 			//path = strings.TrimPrefix(path, "file://")
 			cmd := path + " " + flagStr
-			if strings.HasSuffix(path, "schematic") {
+			if ext == ".schematic" {
 				cmd = "schem -p " + cmd
-			} else if strings.HasSuffix(path, "mcacblock") {
+			} else if ext == ".mcacblock" {
 				cmd = "acme -p " + cmd
-			} else if strings.HasSuffix(path, "bdx") {
+			} else if ext == ".bdx" {
 				cmd = "bdump -p " + cmd
 			}
-			g.addMonkeyPathReader(path, fp)
+			// g.addMonkeyPathReader(path, fp)
 			g.sendCmdAndClose(cmd)
 		}),
 	)
@@ -563,7 +626,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点"), g.startPos.UpdateBtn),
 				g.startPos.PosContent,
 				g.makeConfirmButton("制图", func() {
-					path, fp, err := pathGet()
+					path, _, err := pathGet()
 					if err != nil {
 						return
 					}
@@ -575,7 +638,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 					if err != nil {
 						return
 					}
-					g.addMonkeyPathReader(path, fp)
+					// g.addMonkeyPathReader(path, fp)
 					g.sendCmdAndClose(fmt.Sprintf("plot -p %v -f %v", path, facing))
 				}),
 			),
@@ -592,7 +655,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点"), g.startPos.UpdateBtn),
 				g.startPos.PosContent,
 				g.makeConfirmButton("制图", func() {
-					path, fp, err := pathGet()
+					path, _, err := pathGet()
 					if err != nil {
 						return
 					}
@@ -615,7 +678,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 					if err != nil {
 						return
 					}
-					g.addMonkeyPathReader(path, fp)
+					// g.addMonkeyPathReader(path, fp)
 					g.sendCmdAndClose(fmt.Sprintf("mapart -p %v -mapX %v -mapZ %v -mapY %v", path, mapX, mapZ, mapY))
 				}),
 			),
@@ -646,12 +709,12 @@ func (g *GUI) makeNbtContent() fyne.CanvasObject {
 		widget.NewLabel("从文件构造nbt物品"),
 		pathOption,
 		g.makeConfirmButton("构造", func() {
-			path, fp, err := pathGet()
+			path, _, err := pathGet()
 			if err != nil {
 				return
 			}
 			cmd := fmt.Sprintf("construct %v", path)
-			g.addMonkeyPathReader(path, fp)
+			// g.addMonkeyPathReader(path, fp)
 			g.sendCmdAndClose(cmd)
 		}),
 		widget.NewSeparator(),
@@ -674,7 +737,7 @@ func (g *GUI) makeExportContent() fyne.CanvasObject {
 		container.NewGridWithColumns(2, widget.NewLabel("导出建筑终点位置"), g.endPos.UpdateBtn),
 		g.endPos.PosContent,
 		g.makeConfirmButton("导出", func() {
-			path, fp, err := pathGet()
+			path, _, err := pathGet()
 			if err != nil {
 				return
 			}
@@ -687,13 +750,18 @@ func (g *GUI) makeExportContent() fyne.CanvasObject {
 				return
 			}
 			cmd := fmt.Sprintf("export -p %v", path)
-			g.addMonkeyPathWriter(path, fp)
+			// g.addMonkeyPathWriter(path, fp)
 			g.sendCmdAndClose(cmd)
 		}),
 	)
 }
 
 func (g *GUI) makeMajorContent() fyne.CanvasObject {
+	fileStorageLabel := widget.NewLabel("文件存储")
+	fileStorageLabel.Wrapping = fyne.TextWrapWord
+	fileStorageBtn := widget.NewButton("List Root", func() {
+		fileStorageLabel.SetText(fmt.Sprintf("%v", g.app.Storage().List()))
+	})
 	return &widget.Accordion{
 		Items: []*widget.AccordionItem{
 			// &widget.AccordionItem{
@@ -705,6 +773,17 @@ func (g *GUI) makeMajorContent() fyne.CanvasObject {
 			// 		g.endPos.PosContent,
 			// 	),
 			// },
+			&widget.AccordionItem{
+				Title: "文件位置",
+				Detail: container.NewVBox(
+					&widget.Label{Text: g.app.Storage().RootURI().String(), Wrapping: fyne.TextWrapWord},
+					fileStorageLabel,
+					fileStorageBtn,
+					// widget.NewLabel(g.app.Storage().RootURI().Path()),
+					// widget.NewLabel(g.app.Storage().RootURI().Authority()),
+				),
+				Open: true,
+			},
 			&widget.AccordionItem{
 				Title:  "几何指令",
 				Detail: g.makeGeoCmdContent(),
@@ -734,6 +813,7 @@ func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func()
 	g.setContent = setContent
 	g.getContent = getContent
 	g.masterWindow = masterWindow
+	// g.app = app
 	g.content = container.NewBorder(nil, &widget.Button{
 		Text: "取消",
 		OnTapped: func() {

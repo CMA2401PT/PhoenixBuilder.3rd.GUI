@@ -4,10 +4,9 @@ import (
 	_ "embed"
 	"fmt"
 	"image"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
-	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 
+	"fyne.io/fyne/v2/storage"
 	"github.com/disintegration/imaging"
 	"github.com/lucasb-eyer/go-colorful"
 )
@@ -222,10 +221,19 @@ func MapArt(config *types.MainConfig, blc chan *types.Module) error {
 
 	}
 	pos := config.Position
-	file, hasK := configuration.MonkeyPathFileReader[config.Path]
-	if !hasK {
-		return I18n.ProcessNoSuchFileError(config.Path)
+	// file, hasK := configuration.MonkeyPathFileReader[config.Path]
+	// if !hasK {
+	// 	return I18n.ProcessNoSuchFileError(config.Path)
+	// }
+	uri, err := storage.ParseURI(config.Path)
+	if err != nil {
+		return err
 	}
+	file, err := storage.Reader(uri)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 	img, err := imaging.Decode(file)
 	if err != nil {
 		return fmt.Errorf("Image Decode Error: %v", err)

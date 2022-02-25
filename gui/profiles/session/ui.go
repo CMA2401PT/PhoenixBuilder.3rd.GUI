@@ -25,6 +25,7 @@ type GUI struct {
 	getContent   func() fyne.CanvasObject
 	origContent  fyne.CanvasObject
 	masterWindow fyne.Window
+	app          fyne.App
 
 	writeBackConfigFn func()
 	sessionConfig     *config.SessionConfigWithName
@@ -174,11 +175,12 @@ func (g *GUI) makeToolContent() fyne.CanvasObject {
 	return container.NewVBox(g.loadingIndicator, g.functionGroup)
 }
 
-func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func() fyne.CanvasObject, masterWindow fyne.Window) fyne.CanvasObject {
+func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func() fyne.CanvasObject, masterWindow fyne.Window, app fyne.App) fyne.CanvasObject {
 	g.origContent = getContent()
 	g.setContent = setContent
 	g.getContent = getContent
 	g.masterWindow = masterWindow
+	g.app = app
 	g.term = list_terminal.New()
 	g.term.OnPasteFn = func(s string) {
 		g.cmdInputBar.SetText(s)
@@ -210,7 +212,7 @@ func (g *GUI) AfterMount() {
 			return
 		}
 		g.writeBackConfigFn()
-		g.taskMenu = tasks.New(g.BotSession, g.sendCmd, g.BotSession.NewMonkeyPathReader, g.BotSession.NewMonkeyPathWriter)
+		g.taskMenu = tasks.New(g.BotSession, g.sendCmd, g.app)
 		g.createFromTemplateBtn.OnTapped = func() {
 			g.setContent(g.taskMenu.GetContent(g.setContent, g.getContent, g.masterWindow))
 		}

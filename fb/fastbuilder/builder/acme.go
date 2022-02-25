@@ -6,12 +6,13 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 	bridge_fmt "phoenixbuilder_3rd_gui/fb/session/bridge/fmt"
 	"strconv"
 	"strings"
+
+	"fyne.io/fyne/v2/storage"
 )
 
 func seekBuf(buf *bufio.Reader, seekn int) error {
@@ -39,9 +40,18 @@ func readBig(buf *bufio.Reader, out []byte) error {
 }
 
 func Acme(config *types.MainConfig, blc chan *types.Module) error {
-	file, hasK := configuration.MonkeyPathFileReader[config.Path]
-	if !hasK {
-		return I18n.ProcessNoSuchFileError(config.Path)
+	// file, hasK := configuration.MonkeyPathFileReader[config.Path]
+	// if !hasK {
+	// 	return I18n.ProcessNoSuchFileError(config.Path)
+	// }
+	// defer file.Close()
+	uri, err := storage.ParseURI(config.Path)
+	if err != nil {
+		return err
+	}
+	file, err := storage.Reader(uri)
+	if err != nil {
+		return err
 	}
 	defer file.Close()
 	gz, err := gzip.NewReader(file)

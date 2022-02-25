@@ -5,12 +5,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/bdump"
-	"phoenixbuilder_3rd_gui/fb/fastbuilder/configuration"
 	I18n "phoenixbuilder_3rd_gui/fb/fastbuilder/i18n"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/types"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/world_provider"
 	bridge_fmt "phoenixbuilder_3rd_gui/fb/session/bridge/fmt"
 
+	"fyne.io/fyne/v2/storage"
 	"github.com/andybalholm/brotli"
 )
 
@@ -31,9 +31,18 @@ func ReadBrString(br *bytes.Buffer) (string, error) {
 }
 
 func BDump(config *types.MainConfig, blc chan *types.Module) error {
-	file, hasK := configuration.MonkeyPathFileReader[config.Path]
-	if !hasK {
-		return I18n.ProcessNoSuchFileError(config.Path)
+	// _, hasK := configuration.MonkeyPathFileReader[config.Path]
+	// if !hasK {
+	// 	return I18n.ProcessNoSuchFileError(config.Path)
+	// }
+	// defer file.Close()
+	uri, err := storage.ParseURI(config.Path)
+	if err != nil {
+		return err
+	}
+	file, err := storage.Reader(uri)
+	if err != nil {
+		return err
 	}
 	defer file.Close()
 	{

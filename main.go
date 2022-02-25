@@ -50,7 +50,7 @@ func main() {
 	topWindow.SetMaster()
 	global.MakeThemeToggleBtn(app, appTheme)
 	global.MakeInformPopButton(topWindow)
-	global.MakeBannner("v0.0.2")
+	global.MakeBannner("v0.0.3")
 
 	majorContent := container.NewMax()
 
@@ -87,7 +87,7 @@ func main() {
 	//}
 
 	profilesObject := profiles.New(appStorage)
-	setContent(profilesObject.GetContent(setContent, getContent, topWindow))
+	setContent(profilesObject.GetContent(setContent, getContent, topWindow, app))
 
 	topWindow.Resize(fyne.NewSize(480, 640))
 	topWindow.ShowAndRun()

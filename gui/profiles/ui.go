@@ -23,6 +23,7 @@ type GUI struct {
 	setContent   func(v fyne.CanvasObject)
 	getContent   func() fyne.CanvasObject
 	masterWindow fyne.Window
+	app          fyne.App
 	onPanic      func(error)
 	content      fyne.CanvasObject
 	entryIndex   []int
@@ -134,7 +135,7 @@ func (g *GUI) onDelete(i int) {
 
 func (g *GUI) onLogin(i int) {
 	s := ui_session.New(g.configs[i], g.WriteBackConfigFile)
-	g.setContent(s.GetContent(g.setContent, g.getContent, g.masterWindow))
+	g.setContent(s.GetContent(g.setContent, g.getContent, g.masterWindow, g.app))
 	s.AfterMount()
 	fmt.Println("login", i)
 }
@@ -240,7 +241,7 @@ func (g *GUI) WriteBackConfigFile() {
 	}
 }
 
-func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func() fyne.CanvasObject, masterWindow fyne.Window) fyne.CanvasObject {
+func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func() fyne.CanvasObject, masterWindow fyne.Window, app fyne.App) fyne.CanvasObject {
 	g.onPanic = func(err error) {
 		dialog.ShowError(fmt.Errorf("发生了严重错误，程序即将退出：\n\n%v", err), masterWindow)
 		// os.Exit(-1)
@@ -248,6 +249,7 @@ func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func()
 	g.masterWindow = masterWindow
 	g.setContent = setContent
 	g.getContent = getContent
+	g.app = app
 
 	for _, c := range g.ReadConfigFile() {
 		g.newConfig(c)
