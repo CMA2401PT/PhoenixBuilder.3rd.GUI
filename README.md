@@ -85,6 +85,14 @@ IOS:
 你需要创建一个开发者账号，并建立一个同名 Xcode项目"fastbuilder.third.gui"接着
 fyne-cross ios -app-build 169 -app-id "fastbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder-3rd-Gui"
 ```
+
+### 2022.2.25补充
+现在配置好环境后，输入
+```
+bash fyne_cross_compile.sh
+```
+即可自动打包全平台的分发了
+
 ### 更多
 参考  
 https://developer.fyne.io/started/cross-compiling   
