@@ -176,6 +176,7 @@ func (s *Session) afterStart() chan string {
 }
 
 func (s *Session) beforeStart() (err error) {
+	configuration.SessionInitID += 1
 	// in this function, we need to make sure that the session is valid
 	// first, we need to connect to the fb auth server and get the token
 	// then, we try connecting to netease mc server

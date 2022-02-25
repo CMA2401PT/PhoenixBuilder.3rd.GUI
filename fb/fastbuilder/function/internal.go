@@ -15,6 +15,9 @@ import (
 )
 
 func InitInternalFunctions() {
+	// when session is opened second time, it will be initialized again.
+	SimpleFunctionEnums = make([]*EnumInfo, 0)
+	FunctionMap = make(map[string]*Function)
 	delayEnumId := RegisterEnum("continuous, discrete, none", types.ParseDelayMode, types.DelayModeInvalid)
 	RegisterFunction(&Function{
 		Name:          "exit",

@@ -41,7 +41,7 @@ const (
 	SimpleFunctionArgumentEnum    = 4
 )
 
-var FunctionMap = make(map[string]*Function)
+var FunctionMap map[string]*Function
 
 func RegisterFunction(function *Function) {
 	for _, nm := range function.OwnedKeywords {

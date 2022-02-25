@@ -2,12 +2,13 @@ package nbtconstructor
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"phoenixbuilder_3rd_gui/fb/fastbuilder/command"
 	"phoenixbuilder_3rd_gui/fb/minecraft"
 	"phoenixbuilder_3rd_gui/fb/minecraft/protocol"
 	"phoenixbuilder_3rd_gui/fb/minecraft/protocol/packet"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var isOccupied bool = false

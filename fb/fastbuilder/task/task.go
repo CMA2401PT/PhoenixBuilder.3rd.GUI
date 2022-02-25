@@ -282,7 +282,9 @@ func CreateTask(commandLine string, conn *minecraft.Conn) *Task {
 				request := command.SetBlockRequest(curblock, cfg)
 				err := command.SendSizukanaCommand(request, conn)
 				if err != nil {
-					panic(err)
+					// panic(err)
+					// avoid gui crash when session is stopped but the task is still running"
+					return
 				}
 			} /*else if curblock.Entity != nil {
 				//request := command.SummonRequest(curblock, cfg)
@@ -323,10 +325,24 @@ func CreateTask(commandLine string, conn *minecraft.Conn) *Task {
 
 var ActivateTaskStatus chan bool = make(chan bool)
 
+// var TaskIdCounter *atomic.Int64 = atomic.NewInt64(0)
+// var TaskMap sync.Map
+// var BrokSender chan string = make(chan string)
+// var ExtraDisplayStrings []string = []string{}
+
 func InitTaskStatusDisplay(conn *minecraft.Conn) {
+	sessionInitID := configuration.SessionInitID
+	TaskMap = sync.Map{}
 	go func() {
+		defer func() {
+			recover()
+		}()
 		for {
 			str := <-BrokSender
+			if sessionInitID != configuration.SessionInitID {
+				// actually, the session is changed, so we should stop the task status display
+				return
+			}
 			command.Tellraw(conn, str)
 		}
 	}()
@@ -334,12 +350,23 @@ func InitTaskStatusDisplay(conn *minecraft.Conn) {
 	go func() {
 		for {
 			<-ticker.C
+			if sessionInitID != configuration.SessionInitID {
+				// actually, the session is changed, so we should stop the task status display
+				return
+			}
 			ActivateTaskStatus <- true
 		}
 	}()
 	go func() {
+		defer func() {
+			recover()
+		}()
 		for {
 			<-ActivateTaskStatus
+			if sessionInitID != configuration.SessionInitID {
+				// actually, the session is changed, so we should stop the task status display
+				return
+			}
 			//<- ticker.C
 			if configuration.GlobalFullConfig().Global().TaskDisplayMode == types.TaskDisplayNo {
 				continue

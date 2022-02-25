@@ -123,3 +123,4 @@ func decideDelayThreshold() int {
 // it's suck!
 var MonkeyPathFileReader map[string]fyne.URIReadCloser
 var MonkeyPathFileWriter map[string]fyne.URIWriteCloser
+var SessionInitID int64 = 0
