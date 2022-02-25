@@ -1,7 +1,7 @@
 ICON="-icon unbundled_assets/Icon.png"
-VERSION="-app-version 0.0.3"
+VERSION="-app-version 0.0.4"
 APPID='-app-id "phoenixbuilder.third.gui"'
-APPBUILD='-app-build 145'
+APPBUILD='-app-build 169'
 ARGS="$ICON $VERSION $APPID $APPBUILD"
 
 fyne-cross linux -arch=amd64 $ARGS -name "FastBuilder_3rd_Gui"

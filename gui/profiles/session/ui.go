@@ -39,6 +39,9 @@ type GUI struct {
 	quitButton                      *widget.Button
 	createFromTemplateBtn           *widget.Button
 	taskSettingsButton              *widget.Button
+	handleCmdInputButton            *widget.Button
+	leftKeyEntryButton              *widget.Button
+	keyboardLifter                  *fyne.Container
 	titleRedirectBarHiderActivated  bool
 	titleRedirectBar                *widget.Entry
 	titleRedirectBarLastUpdatedTime time.Time
@@ -138,6 +141,47 @@ func (g *GUI) makeToolContent() fyne.CanvasObject {
 	g.cmdInputBar.OnSubmitted = func(s string) {
 		g.sendCmd(s)
 	}
+	g.handleCmdInputButton = &widget.Button{
+		Text:          "",
+		Icon:          theme.NavigateNextIcon(),
+		IconPlacement: widget.ButtonIconTrailingText,
+		Importance:    widget.MediumImportance,
+		OnTapped: func() {
+			g.sendCmd(g.cmdInputBar.Text)
+		},
+	}
+	g.keyboardLifter = container.NewVBox()
+	g.leftKeyEntryButton = &widget.Button{
+		Text:       "",
+		Icon:       theme.MoveUpIcon(),
+		Importance: widget.MediumImportance,
+		OnTapped: func() {
+			if len(g.keyboardLifter.Objects) == 0 {
+				g.keyboardLifter.Add(
+					container.NewBorder(nil, nil, nil, nil, &widget.Button{
+						Icon:       theme.MoveDownIcon(),
+						Importance: widget.LowImportance,
+						OnTapped: func() {
+							g.keyboardLifter.Objects = make([]fyne.CanvasObject, 0)
+							g.keyboardLifter.Refresh()
+						},
+					}),
+				)
+				for i := 0; i < 5; i++ {
+					g.keyboardLifter.Add(widget.NewLabel(""))
+				}
+			} else {
+				g.keyboardLifter.Add(widget.NewLabel(""))
+			}
+		},
+	}
+	var cmdInputRight *fyne.Container
+	if fyne.CurrentDevice().IsMobile() {
+		cmdInputRight = container.NewGridWithColumns(2, g.leftKeyEntryButton, g.handleCmdInputButton)
+	} else {
+		cmdInputRight = container.NewGridWithColumns(1, g.handleCmdInputButton)
+	}
+
 	g.quitButton = widget.NewButton("结束会话", func() {
 		g.closeGUI()
 	})
@@ -165,10 +209,11 @@ func (g *GUI) makeToolContent() fyne.CanvasObject {
 			OnTapped: func() {
 				g.cmdInputBar.SetText("")
 			},
-		}, nil, g.cmdInputBar),
+		}, cmdInputRight, g.cmdInputBar),
 		container.NewGridWithColumns(3,
 			g.quitButton, g.taskSettingsButton, g.createFromTemplateBtn,
 		),
+		g.keyboardLifter,
 	)
 
 	g.functionGroup.Hide()

@@ -48,9 +48,9 @@ func New(BotSession *bot_session.Session, sendCmdFn func(string), app fyne.App) 
 }
 
 type PosWidget struct {
-	PosContent fyne.CanvasObject
-	UpdateBtn  *widget.Button
-	WX, WY, WZ *widget.Entry
+	// posContent fyne.CanvasObject
+	UpdateBtn *widget.Button
+	// WX, WY, WZ *widget.Entry
 	dX, dY, dZ binding.Int
 }
 
@@ -59,13 +59,15 @@ func NewPosWidget(x, y, z int, btn *widget.Button) *PosWidget {
 	w.dX = binding.BindInt(&x)
 	w.dY = binding.BindInt(&y)
 	w.dZ = binding.BindInt(&z)
-
-	w.WX = widget.NewEntryWithData(binding.IntToString(w.dX))
-	w.WY = widget.NewEntryWithData(binding.IntToString(w.dY))
-	w.WZ = widget.NewEntryWithData(binding.IntToString(w.dZ))
-	w.PosContent = container.NewGridWithColumns(3, w.WX, w.WY, w.WZ)
 	w.UpdateBtn = btn
 	return w
+}
+
+func (pw *PosWidget) PosContent() fyne.CanvasObject {
+	return container.NewGridWithColumns(3,
+		widget.NewEntryWithData(binding.IntToString(pw.dX)),
+		widget.NewEntryWithData(binding.IntToString(pw.dY)),
+		widget.NewEntryWithData(binding.IntToString(pw.dZ)))
 }
 
 func (pw *PosWidget) GetPos() (x, y, z int, err error) {
@@ -147,6 +149,31 @@ func (g *GUI) makeSelectEntry(options []string, name string, hint string) (*widg
 	return &widget.FormItem{Text: name, Widget: w, HintText: hint}, getter
 }
 
+func (g *GUI) makeRGSelectEntry(options []string, name string, hint string) (*widget.FormItem, func() (string, error)) {
+	coptions := make([]string, len(options))
+	copy(coptions, options)
+	content := &widget.RadioGroup{
+		Horizontal: true,
+		Required:   true,
+		Options:    coptions,
+		Selected:   coptions[0],
+	}
+
+	// w := widget.NewSelectEntry(coptions)
+	// w.SetText(options[0])
+	getter := func() (string, error) {
+		v := content.Selected
+		for _, o := range coptions {
+			if o == v {
+				return v, nil
+			}
+		}
+		dialog.NewError(fmt.Errorf("%v选项错误\n%v不是可选项\n可选项为%v", name, v, coptions), g.masterWindow).Show()
+		return "", fmt.Errorf("%v选项错误", hint)
+	}
+	return &widget.FormItem{Text: name, Widget: content, HintText: hint}, getter
+}
+
 func (g *GUI) makeTranslateSelectEntry(translateOptions []string, options []string, name string, hint string) (*widget.FormItem, func() (string, error)) {
 	ctransOptions := make([]string, len(translateOptions))
 	copy(ctransOptions, translateOptions)
@@ -168,6 +195,36 @@ func (g *GUI) makeTranslateSelectEntry(translateOptions []string, options []stri
 		return "", fmt.Errorf("%v选项错误", hint)
 	}
 	return &widget.FormItem{Text: name, Widget: w, HintText: hint}, getter
+}
+
+func (g *GUI) makeTranslateRGSelectEntry(translateOptions []string, options []string, name string, hint string) (*widget.FormItem, func() (string, error)) {
+	ctransOptions := make([]string, len(translateOptions))
+	copy(ctransOptions, translateOptions)
+	coptions := make([]string, len(options))
+	copy(coptions, options)
+	if len(translateOptions) != len(options) {
+		panic("内部错误：翻译选项与选项数量不一致")
+	}
+	content := &widget.RadioGroup{
+		Horizontal: true,
+		Required:   true,
+		Options:    ctransOptions,
+		Selected:   ctransOptions[0],
+	}
+
+	// w := widget.NewSelectEntry(coptions)
+	// w.SetText(options[0])
+	getter := func() (string, error) {
+		v := content.Selected
+		for i, o := range ctransOptions {
+			if o == v {
+				return coptions[i], nil
+			}
+		}
+		dialog.NewError(fmt.Errorf("%v选项错误\n%v不是可选项\n可选项为%v", name, v, coptions), g.masterWindow).Show()
+		return "", fmt.Errorf("%v选项错误", hint)
+	}
+	return &widget.FormItem{Text: name, Widget: content, HintText: hint}, getter
 }
 
 func (g *GUI) makeStringEntry(v string, name string, hint string) (*widget.FormItem, func() (string, error)) {
@@ -229,12 +286,12 @@ func (g *GUI) makeReadPathOption(description string, placeHolderStr string, filt
 	getter := func() (string, string, error) {
 		gv, err := bv.Get()
 		if gv == "" {
-			err = fmt.Errorf("%v必须选择文件", description)
+			err = fmt.Errorf("错误：未选择文件")
 			dialog.NewError(err, g.masterWindow).Show()
 			return "", "", err
 		}
 		if err != nil {
-			err = fmt.Errorf("%v数据错误\n%v", description, err)
+			err = fmt.Errorf("%v：数据错误，无法获得有效文件路径\n%v", description, err)
 			dialog.NewError(err, g.masterWindow).Show()
 			return "", "", err
 		}
@@ -331,12 +388,12 @@ func (g *GUI) makeWritePathOption(description string, placeHolderStr string, fil
 	getter := func() (string, string, error) {
 		gv, err := bv.Get()
 		if gv == "" {
-			err = fmt.Errorf("%v必须选择文件", description)
+			err = fmt.Errorf("错误：未选择文件")
 			dialog.NewError(err, g.masterWindow).Show()
 			return "", "", err
 		}
 		if err != nil {
-			err = fmt.Errorf("%v数据错误\n%v", description, err)
+			err = fmt.Errorf("%v：数据错误，无法获得有效文件路径\n%v", description, err)
 			dialog.NewError(err, g.masterWindow).Show()
 			return "", "", err
 		}
@@ -411,15 +468,15 @@ func (g *GUI) makeConfirmButton(hint string, onTapped func()) *widget.Button {
 }
 
 func (g *GUI) makeGeoCmdContent() fyne.CanvasObject {
-	rund_circleFormItem, rund_circleGetter := g.makeTranslateSelectEntry([]string{"圆面", "圈"}, []string{"round", "circle"}, "目标(圆面/圈):", "圈只有外面一圈")
+	rund_circleFormItem, rund_circleGetter := g.makeTranslateRGSelectEntry([]string{"圆面", "圈"}, []string{"round", "circle"}, "目标(圆面/圈):", "圈只有外面一圈")
 	radiusFormItem, radiusGet := g.makeIntEntry(0, "半径", "圆或圈的半径")
-	facingFormItem, facingGet := g.makeSelectEntry([]string{"y", "x", "z"}, "朝向", "可选值有x,y,z")
+	facingFormItem, facingGet := g.makeRGSelectEntry([]string{"y", "x", "z"}, "朝向", "例: 选择y,则会建造在x-z平面上")
 	heightFormItem, heightGet := g.makeIntEntry(0, "高度", "")
 	lengthFormItem, lengthGet := g.makeIntEntry(0, "长度", "")
 	widthFormItem, widthGet := g.makeIntEntry(0, "宽度", "")
 	blockFormItem, blockGet := g.makeStringEntry("air", "方块", "方块名称")
 	blockdataFormItem, blockdataGet := g.makeIntEntry(0, "值", "方块特殊值")
-	shpere_shapeFormItem, shpere_shapeGet := g.makeTranslateSelectEntry([]string{"空心", "实心"}, []string{"hollow", "solid"}, "球填充", "空心/实心")
+	shpere_shapeFormItem, shpere_shapeGet := g.makeTranslateRGSelectEntry([]string{"空心", "实心"}, []string{"hollow", "solid"}, "球填充", "空心则只有一个壳")
 
 	c := container.NewDocTabs(
 		&container.TabItem{
@@ -434,7 +491,7 @@ func (g *GUI) makeGeoCmdContent() fyne.CanvasObject {
 					blockdataFormItem,
 				),
 				container.NewGridWithColumns(2, widget.NewLabel("圆心位置"), g.startPos.UpdateBtn),
-				g.startPos.PosContent,
+				g.startPos.PosContent(),
 				g.makeConfirmButton("绘制", func() {
 					target, err := rund_circleGetter()
 					if err != nil {
@@ -470,7 +527,7 @@ func (g *GUI) makeGeoCmdContent() fyne.CanvasObject {
 				radiusFormItem,
 				shpere_shapeFormItem),
 				container.NewGridWithColumns(2, widget.NewLabel("球心位置"), g.startPos.UpdateBtn),
-				g.startPos.PosContent,
+				g.startPos.PosContent(),
 				g.makeConfirmButton("绘制", func() {
 					radius, err := radiusGet()
 					if err != nil {
@@ -495,7 +552,7 @@ func (g *GUI) makeGeoCmdContent() fyne.CanvasObject {
 				widthFormItem,
 				facingFormItem),
 				container.NewGridWithColumns(2, widget.NewLabel("圆心位置"), g.startPos.UpdateBtn),
-				g.startPos.PosContent,
+				g.startPos.PosContent(),
 				g.makeConfirmButton("绘制", func() {
 					length, err := lengthGet()
 					if err != nil {
@@ -524,7 +581,7 @@ func (g *GUI) makeGeoCmdContent() fyne.CanvasObject {
 				widthFormItem,
 				heightFormItem),
 				container.NewGridWithColumns(2, widget.NewLabel("球心位置"), g.startPos.UpdateBtn),
-				g.startPos.PosContent,
+				g.startPos.PosContent(),
 				g.makeConfirmButton("绘制", func() {
 					length, err := lengthGet()
 					if err != nil {
@@ -562,7 +619,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 		invalidatecommandsOption,
 		strictOption,
 		container.NewGridWithColumns(2, widget.NewLabel("建筑起点位置"), g.startPos.UpdateBtn),
-		g.startPos.PosContent,
+		g.startPos.PosContent(),
 		g.makeConfirmButton("导入", func() {
 			path, ext, err := pathGet()
 			if err != nil {
@@ -612,7 +669,7 @@ func (g *GUI) makeBuildingContent() fyne.CanvasObject {
 
 func (g *GUI) makePlotContent() fyne.CanvasObject {
 	pathOption, pathGet := g.makeReadPathOption("选择图片", "png/jpg", []string{".png", ".PNG", ".jpg", ".jpeg", ".JPG"})
-	facingFormItem, facingGet := g.makeSelectEntry([]string{"y", "x", "z"}, "朝向", "可选值有x,y,z")
+	facingFormItem, facingGet := g.makeRGSelectEntry([]string{"y", "x", "z"}, "朝向", "做地图画应该选y")
 	mapXFormItem, mapXGet := g.makeIntEntry(1, "横向", "横向由几张地图构成")
 	mapZFormItem, mapZGet := g.makeIntEntry(1, "纵向", "纵向由几张地图构成")
 	mapYFormItem, mapYGet := g.makeIntEntry(0, "允许使用高度", ">40时通过阴影产生更多颜色")
@@ -624,7 +681,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 				widget.NewForm(facingFormItem),
 				widget.NewLabel("提示:起点为64的奇数倍时可以和地图对齐"),
 				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点"), g.startPos.UpdateBtn),
-				g.startPos.PosContent,
+				g.startPos.PosContent(),
 				g.makeConfirmButton("制图", func() {
 					path, _, err := pathGet()
 					if err != nil {
@@ -653,7 +710,7 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 				),
 				widget.NewLabel("提示:起点为64的奇数倍时可以和地图对齐"),
 				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点"), g.startPos.UpdateBtn),
-				g.startPos.PosContent,
+				g.startPos.PosContent(),
 				g.makeConfirmButton("制图", func() {
 					path, _, err := pathGet()
 					if err != nil {
@@ -733,9 +790,9 @@ func (g *GUI) makeExportContent() fyne.CanvasObject {
 	return container.NewVBox(
 		pathOption,
 		container.NewGridWithColumns(2, widget.NewLabel("导出建筑起点位置"), g.startPos.UpdateBtn),
-		g.startPos.PosContent,
+		g.startPos.PosContent(),
 		container.NewGridWithColumns(2, widget.NewLabel("导出建筑终点位置"), g.endPos.UpdateBtn),
-		g.endPos.PosContent,
+		g.endPos.PosContent(),
 		g.makeConfirmButton("导出", func() {
 			path, _, err := pathGet()
 			if err != nil {
@@ -757,11 +814,11 @@ func (g *GUI) makeExportContent() fyne.CanvasObject {
 }
 
 func (g *GUI) makeMajorContent() fyne.CanvasObject {
-	fileStorageLabel := widget.NewLabel("文件存储")
-	fileStorageLabel.Wrapping = fyne.TextWrapWord
-	fileStorageBtn := widget.NewButton("List Root", func() {
-		fileStorageLabel.SetText(fmt.Sprintf("%v", g.app.Storage().List()))
-	})
+	// fileStorageLabel := widget.NewLabel("文件存储")
+	// fileStorageLabel.Wrapping = fyne.TextWrapWord
+	// fileStorageBtn := widget.NewButton("List Root", func() {
+	// 	fileStorageLabel.SetText(fmt.Sprintf("%v", g.app.Storage().List()))
+	// })
 	return &widget.Accordion{
 		Items: []*widget.AccordionItem{
 			// &widget.AccordionItem{
@@ -773,17 +830,17 @@ func (g *GUI) makeMajorContent() fyne.CanvasObject {
 			// 		g.endPos.PosContent,
 			// 	),
 			// },
-			&widget.AccordionItem{
-				Title: "文件位置",
-				Detail: container.NewVBox(
-					&widget.Label{Text: g.app.Storage().RootURI().String(), Wrapping: fyne.TextWrapWord},
-					fileStorageLabel,
-					fileStorageBtn,
-					// widget.NewLabel(g.app.Storage().RootURI().Path()),
-					// widget.NewLabel(g.app.Storage().RootURI().Authority()),
-				),
-				Open: true,
-			},
+			// &widget.AccordionItem{
+			// 	Title: "文件位置",
+			// 	Detail: container.NewVBox(
+			// 		&widget.Label{Text: g.app.Storage().RootURI().String(), Wrapping: fyne.TextWrapWord},
+			// 		// fileStorageLabel,
+			// 		// fileStorageBtn,
+			// 		// widget.NewLabel(g.app.Storage().RootURI().Path()),
+			// 		// widget.NewLabel(g.app.Storage().RootURI().Authority()),
+			// 	),
+			// 	Open: true,
+			// },
 			&widget.AccordionItem{
 				Title:  "几何指令",
 				Detail: g.makeGeoCmdContent(),

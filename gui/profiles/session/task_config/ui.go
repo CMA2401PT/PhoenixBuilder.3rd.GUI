@@ -245,19 +245,19 @@ func MakeDelaySetterGUI(ds DelaySetter, isGlobal bool) *DelaySetterGUI {
 	Delay := int(dsg.ds.DelayConfigGetter().Delay)
 	bDelay := binding.BindInt(&Delay)
 	dsg.bindDelay = bDelay
-	delayEntry := widget.NewEntryWithData(binding.IntToString(bDelay))
+	// delayEntry := widget.NewEntryWithData(binding.IntToString(bDelay))
 	DelayThres := int(dsg.ds.DelayConfigGetter().DelayThreshold)
 	bDelayThres := binding.BindInt(&DelayThres)
 	dsg.bindDelayThres = bDelayThres
 	delayDelayThresEntry := widget.NewEntryWithData(binding.IntToString(bDelayThres))
 	dsg.typeContinuousContent = container.NewVBox(
 		widget.NewLabelWithStyle("连续发包/稳定", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		container.NewBorder(nil, nil, widget.NewLabel("放置每个方块的延迟(毫秒):"), nil, delayEntry),
+		container.NewBorder(nil, nil, widget.NewLabel("放置每个方块的延迟(毫秒):"), nil, widget.NewEntryWithData(binding.IntToString(bDelay))),
 	)
 	dsg.typeDiscreteContent = container.NewVBox(
 		widget.NewLabelWithStyle("离散发包/较慢", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 		container.NewBorder(nil, nil, widget.NewLabel("每放置"), widget.NewLabel("个方块"), delayDelayThresEntry),
-		container.NewBorder(nil, nil, widget.NewLabel("就等待"), widget.NewLabel("秒"), delayEntry),
+		container.NewBorder(nil, nil, widget.NewLabel("就等待"), widget.NewLabel("秒"), widget.NewEntryWithData(binding.IntToString(bDelay))),
 	)
 	dsg.submit = &widget.Button{
 		Text: "设置",
