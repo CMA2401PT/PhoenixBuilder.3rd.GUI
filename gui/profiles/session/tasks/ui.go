@@ -397,14 +397,15 @@ func (g *GUI) makeWritePathOption(description string, placeHolderStr string, fil
 			dialog.NewError(err, g.masterWindow).Show()
 			return "", "", err
 		}
-		for _, f := range filter {
-			if f == gExt {
-				return gv, gExt, nil
-			}
-		}
-		err = fmt.Errorf("%v\n不具有后缀\n%v", gExt, filter)
-		dialog.NewError(err, g.masterWindow).Show()
-		return "", "", err
+		return gv, gExt, nil
+		// for _, f := range filter {
+		// 	if f == gExt {
+		// 		return gv, gExt, nil
+		// 	}
+		// }
+		// err = fmt.Errorf("%v\n不具有后缀\n%v", gExt, filter)
+		// dialog.NewError(err, g.masterWindow).Show()
+		// return "", "", err
 	}
 	return container.NewBorder(nil, nil, nil, &widget.Button{
 		Text: description,
@@ -419,17 +420,23 @@ func (g *GUI) makeWritePathOption(description string, placeHolderStr string, fil
 					return
 				}
 				ext := writer.URI().Extension()
-				for _, e := range filter {
-					if ext == e {
-						gExt = ext
-						uri := writer.URI().String()
-						bv.Set(uri)
-						writer.Close()
-						return
-					}
-				}
-				err = fmt.Errorf("文件结尾需要有以下后缀之一\n%v", filter)
-				dialog.NewError(err, g.masterWindow).Show()
+				// for _, e := range filter {
+				// 	if ext == e {
+				// 		gExt = ext
+				// 		uri := writer.URI().String()
+				// 		bv.Set(uri)
+				// 		writer.Close()
+				// 		return
+				// 	}
+				// }
+
+				gExt = ext
+				uri := writer.URI().String()
+				bv.Set(uri)
+				writer.Close()
+				return
+				// err = fmt.Errorf("文件结尾需要有以下后缀之一\n%v", filter)
+				// dialog.NewError(err, g.masterWindow).Show()
 			}, g.masterWindow)
 			fd.SetFilter(storage.NewExtensionFileFilter(filter))
 			fd.Show()

@@ -1,6 +1,6 @@
 ICON="-icon unbundled_assets/Icon.png"
 VERSION="-app-version 0.0.4"
-APPID='-app-id "phoenixbuilder.third.gui"'
+APPID=' -app-id "fastbuilder.third.gui"'
 APPBUILD='-app-build 169'
 ARGS="$ICON $VERSION $APPID $APPBUILD"
 

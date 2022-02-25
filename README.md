@@ -70,20 +70,20 @@ go install github.com/fyne-io/fyne-cross
 编译 (输出在 fyne-cross/dist 目录下)
 ```
 Linux:
-fyne-cross linux -arch=amd64 -app-build 169 -app-id "phoenixbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
+fyne-cross linux -arch=amd64 -app-build 169 -app-id "fastbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
 
 MacOS:
-fyne-cross darwin -arch=amd64 -app-build 169 -app-id "phoenixbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
+fyne-cross darwin -arch=amd64 -app-build 169 -app-id "fastbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
 
 Windows:
-fyne-cross windows -arch=amd64 -app-build 169 -app-id "phoenixbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui.exe"
+fyne-cross windows -arch=amd64 -app-build 169 -app-id "fastbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui.exe"
 
 Android:
-fyne-cross android -arch=arm64 -app-build 169 -app-id "phoenixbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
+fyne-cross android -arch=arm64 -app-build 169 -app-id "fastbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder_3rd_Gui"
 
 IOS:
-你需要创建一个开发者账号，并建立一个同名 Xcode项目"phoenixbuilder.third.gui"接着
-fyne-cross ios -app-build 169 -app-id "phoenixbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder-3rd-Gui"
+你需要创建一个开发者账号，并建立一个同名 Xcode项目"fastbuilder.third.gui"接着
+fyne-cross ios -app-build 169 -app-id "fastbuilder.third.gui" -app-version 0.0.4 -icon unbundled_assets/Icon.png  -name "FastBuilder-3rd-Gui"
 ```
 ### 更多
 参考  
