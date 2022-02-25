@@ -48,14 +48,14 @@ func makeProfileEntry() fyne.CanvasObject {
 		widget.NewLabel("err,name not set"),
 		container.NewHBox(
 			&widget.Button{
-				Text:          "删除",
+				Text:          "",
 				Icon:          theme.DeleteIcon(),
 				IconPlacement: widget.ButtonIconLeadingText,
 				Importance:    widget.LowImportance,
 			},
 			&widget.Button{
-				Text:          "编辑",
-				Icon:          theme.SettingsIcon(),
+				Text:          "",
+				Icon:          theme.DocumentCreateIcon(),
 				IconPlacement: widget.ButtonIconLeadingText,
 				Importance:    widget.LowImportance,
 			},

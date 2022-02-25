@@ -588,7 +588,8 @@ func (g *GUI) makePlotContent() fyne.CanvasObject {
 					mapZFormItem,
 					mapYFormItem,
 				),
-				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点(建议为64的奇数倍)"), g.startPos.UpdateBtn),
+				widget.NewLabel("提示:起点为64的奇数倍时可以和地图对齐"),
+				container.NewGridWithColumns(2, widget.NewLabel("图片绘制起点"), g.startPos.UpdateBtn),
 				g.startPos.PosContent,
 				g.makeConfirmButton("制图", func() {
 					path, fp, err := pathGet()
@@ -740,7 +741,7 @@ func (g *GUI) GetContent(setContent func(v fyne.CanvasObject), getContent func()
 		},
 		Icon:          theme.CancelIcon(),
 		IconPlacement: widget.ButtonIconLeadingText,
-	}, nil, nil, g.majorContent)
+	}, nil, nil, container.NewVScroll(g.majorContent))
 
 	return g.content
 }
