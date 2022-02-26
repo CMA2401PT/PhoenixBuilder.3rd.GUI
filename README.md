@@ -1,5 +1,10 @@
 # PhoenixBuilder.3rd.GUI
 
+# 注意
+该项目已经合并到官方FB中：  
+https://github.com/LNSSPsd/PhoenixBuilder/tree/fyne-gui  
+后续将不再维护该仓库，请切换到官方fb以保证功能更新
+
 ## 说明
 PhoenixBuilder.3rd.GUI 是第三方开发者开发的套壳 FastBuilder  
 提供了一个带有界面的，完全跨平台的图形化Fastbuilder  
